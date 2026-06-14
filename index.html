@@ -1,0 +1,2140 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Financial OPD Dashboard · Team Wealth Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#080b13;
+  --bg-soft:#0d111c;
+  --navy:#1b2740;
+  --navy-2:#161f34;
+  --navy-3:#24314f;
+  --gold:#C8A765;
+  --gold-soft:#AF9E73;
+  --cream:#D5CDB7;
+  --white:#FFFFFF;
+  --line:rgba(200,167,101,.22);
+  --line-soft:rgba(213,205,183,.09);
+  --muted:#8b96ad;
+  --ok:#74AE84;
+  --warn:#D7AE5E;
+  --risk:#C76B62;
+  --radius:24px;
+  --radius-sm:16px;
+  --shadow:0 24px 60px -28px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Prompt','Inter',system-ui,sans-serif;
+  background:
+    radial-gradient(1100px 560px at 82% -8%, rgba(30,41,68,.5), transparent 60%),
+    radial-gradient(900px 520px at -8% 108%, rgba(200,167,101,.06), transparent 60%),
+    var(--bg);
+  color:var(--cream);-webkit-font-smoothing:antialiased;line-height:1.5;
+}
+::selection{background:var(--gold);color:var(--navy)}
+input,select,textarea,button{font-family:inherit}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:rgba(200,167,101,.22);border-radius:9px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ===== Layout ===== */
+.app{display:grid;grid-template-columns:262px 1fr;min-height:100vh}
+.sidebar{
+  background:linear-gradient(180deg,var(--navy) 0%, #131b2e 100%);
+  border-right:1px solid var(--line-soft);
+  padding:26px 16px;position:sticky;top:0;height:100vh;overflow-y:auto;
+  display:flex;flex-direction:column;gap:4px;
+}
+.brand{display:flex;align-items:center;gap:12px;padding:4px 8px 22px;border-bottom:1px solid var(--line-soft);margin-bottom:12px}
+.brand .mark{width:44px;height:44px;border-radius:14px;flex:0 0 auto;background:linear-gradient(145deg,var(--gold),var(--gold-soft));display:grid;place-items:center;color:var(--navy);font-weight:800;font-family:'Inter';font-size:18px;box-shadow:0 10px 24px -10px rgba(200,167,101,.6)}
+.brand .bt{font-family:'Inter';font-weight:700;letter-spacing:.03em;color:var(--white);font-size:15px;line-height:1.15}
+.brand .bs{font-size:10px;color:var(--gold);letter-spacing:.24em;text-transform:uppercase;margin-top:3px}
+.nav-label{font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);padding:16px 12px 7px}
+.nav-item{display:flex;align-items:center;gap:13px;padding:11px 13px;border-radius:13px;cursor:pointer;color:var(--cream);font-size:14px;font-weight:300;border:1px solid transparent;transition:.18s}
+.nav-item .ic{width:18px;text-align:center;opacity:.8;font-size:14px}
+.nav-item:hover{background:rgba(255,255,255,.035);color:var(--white)}
+.nav-item.active{background:linear-gradient(90deg,rgba(200,167,101,.16),rgba(200,167,101,.03));border-color:var(--line);color:var(--white);font-weight:400}
+.nav-item.active .ic{color:var(--gold);opacity:1}
+.sidebar .spacer{flex:1;min-height:14px}
+.side-actions{display:flex;flex-direction:column;gap:8px;padding-top:14px;border-top:1px solid var(--line-soft);margin-top:8px}
+
+/* ===== Main / topbar ===== */
+.main{min-width:0}
+.topbar{position:sticky;top:0;z-index:30;background:rgba(8,11,19,.82);backdrop-filter:blur(16px);border-bottom:1px solid var(--line-soft);padding:18px 36px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.topbar h1{font-size:21px;font-weight:600;color:var(--white);letter-spacing:.01em}
+.topbar .sub{font-size:12.5px;color:var(--gold-soft);margin-top:3px}
+.topbar .right{display:flex;align-items:center;gap:22px;flex:0 0 auto}
+.meta{text-align:right;font-size:11.5px;color:var(--muted)}
+.meta b{color:var(--cream);font-weight:500}
+.content{padding:32px 36px 80px;max-width:1500px;margin:0 auto}
+
+/* ===== Buttons ===== */
+.btn{border:1px solid var(--line);background:rgba(200,167,101,.05);color:var(--cream);padding:9px 16px;border-radius:12px;font-size:13px;cursor:pointer;transition:.18s;display:inline-flex;align-items:center;gap:8px;font-weight:400;white-space:nowrap}
+.btn:hover{background:rgba(200,167,101,.14);border-color:var(--gold);color:var(--white)}
+.btn.gold{background:linear-gradient(135deg,var(--gold),var(--gold-soft));color:var(--navy);border-color:transparent;font-weight:600}
+.btn.gold:hover{filter:brightness(1.07)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:7px 13px;font-size:12px}
+
+/* ===== Cards ===== */
+.card{background:linear-gradient(165deg,var(--navy) 0%, var(--navy-2) 100%);border:1px solid var(--line-soft);border-radius:var(--radius);padding:26px;box-shadow:var(--shadow);position:relative}
+.card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.card-h h3{font-size:15px;font-weight:600;color:var(--white);letter-spacing:.01em}
+.card-h .eyebrow{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+.grid{display:grid;gap:18px}
+.section-title{display:flex;align-items:center;gap:14px;margin:38px 0 18px}
+.section-title h2{font-size:15px;color:var(--gold);font-weight:600;letter-spacing:.05em}
+.section-title .ln{height:1px;flex:1;background:linear-gradient(90deg,var(--line-soft),transparent)}
+
+/* ===== Hero score ===== */
+.hero-score{display:grid;grid-template-columns:300px 1fr;gap:30px;align-items:center}
+.hs-right{display:flex;flex-direction:column;gap:14px}
+.hs-title{font-size:13px;letter-spacing:.04em;color:var(--gold-soft)}
+.hs-head{font-size:26px;font-weight:600;color:var(--white);line-height:1.25}
+.hs-sub{font-size:13.5px;color:var(--muted);line-height:1.6;max-width:560px}
+.hs-counts{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.count-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;font-size:12.5px;background:rgba(255,255,255,.03);border:1px solid var(--line-soft)}
+.count-pill b{font-family:'Inter';font-weight:700}
+.count-pill .dot{width:8px;height:8px;border-radius:50%}
+
+.score-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.gauge{position:relative;width:260px;height:158px}
+.gauge .num{position:absolute;left:0;right:0;bottom:6px;text-align:center}
+.gauge .num .s{font-family:'Inter';font-size:54px;font-weight:800;line-height:1}
+.gauge .num .o{font-size:12px;color:var(--muted);margin-top:3px;letter-spacing:.04em}
+.status-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:999px;font-size:13px;font-weight:600;letter-spacing:.02em}
+.status-pill .dot{width:8px;height:8px;border-radius:50%}
+.st-ok{background:rgba(116,174,132,.13);color:var(--ok);border:1px solid rgba(116,174,132,.32)}
+.st-warn{background:rgba(215,174,94,.13);color:var(--warn);border:1px solid rgba(215,174,94,.32)}
+.st-risk{background:rgba(199,107,98,.13);color:var(--risk);border:1px solid rgba(199,107,98,.32)}
+
+/* ===== KPI ===== */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+.kpi{background:linear-gradient(168deg,var(--navy) 0%, #131c30 100%);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:20px}
+.kpi .lbl{font-size:11.5px;color:var(--muted);margin-bottom:10px}
+.kpi .val{font-family:'Inter';font-size:22px;font-weight:700;color:var(--white);letter-spacing:-.01em}
+.kpi .val .cur{font-size:13px;color:var(--gold-soft);font-weight:500;margin-right:2px}
+.kpi .sub{font-size:11px;color:var(--muted);margin-top:6px}
+.kpi.hero-kpi{background:linear-gradient(150deg,#2a3c64,#1a2540);border:1.5px solid var(--gold);box-shadow:0 0 0 1px rgba(200,167,101,.15),0 16px 40px -20px rgba(200,167,101,.35)}
+.kpi.hero-kpi .nw-eyebrow{font-size:9.5px;letter-spacing:.22em;color:var(--gold);font-weight:700;font-family:'Inter';margin-bottom:4px}
+.kpi.hero-kpi .lbl{color:var(--cream);margin-bottom:8px}
+.kpi.hero-kpi .val{color:var(--gold);font-size:29px}
+.kpi.hero-kpi .sub{color:var(--gold-soft)}
+.field input[type=date]{color-scheme:dark}
+.child-row{display:grid;grid-template-columns:1.4fr 1fr auto;gap:12px;align-items:end;margin-bottom:12px}
+.child-row .rm{width:38px;height:42px;border-radius:11px;border:1px solid var(--line-soft);background:rgba(199,107,98,.08);color:var(--risk);cursor:pointer;font-size:16px;transition:.15s}
+.child-row .rm:hover{background:rgba(199,107,98,.2);border-color:var(--risk)}
+.age-hint{font-size:11px;color:var(--gold-soft);padding-bottom:12px;white-space:nowrap}
+.pos{color:var(--ok)!important}.neg{color:var(--risk)!important}
+
+/* ===== Balance ===== */
+.balance{display:grid;grid-template-columns:1fr 28px 1fr 28px 1.15fr;align-items:center;gap:6px}
+.bal-col{border-radius:var(--radius-sm);padding:22px;text-align:center;border:1px solid var(--line-soft)}
+.bal-col.a{background:linear-gradient(160deg,rgba(116,174,132,.1),rgba(116,174,132,.02))}
+.bal-col.d{background:linear-gradient(160deg,rgba(199,107,98,.1),rgba(199,107,98,.02))}
+.bal-col.n{background:linear-gradient(160deg,rgba(200,167,101,.16),rgba(200,167,101,.03));border-color:var(--line)}
+.bal-col .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.bal-col .v{font-family:'Inter';font-size:23px;font-weight:700;margin-top:8px}
+.bal-col.a .v{color:var(--ok)}.bal-col.d .v{color:var(--risk)}.bal-col.n .v{color:var(--gold);font-size:26px}
+.bal-op{text-align:center;font-size:22px;color:var(--gold-soft);font-weight:300}
+
+/* ===== Ratios ===== */
+.ratio-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.ratio{background:linear-gradient(168deg,var(--navy),#141d31);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:20px;display:flex;flex-direction:column;gap:13px}
+.ratio .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.ratio .nm{font-size:12.5px;color:var(--cream);font-weight:500;line-height:1.35}
+.ratio .cur{font-family:'Inter';font-size:27px;font-weight:700;color:var(--white)}
+.ratio .cur small{font-size:13px;color:var(--gold-soft);font-weight:500}
+.ratio .tgt{font-size:11px;color:var(--muted)}
+.ratio .bar{height:7px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden}
+.ratio .bar>i{display:block;height:100%;border-radius:99px;transition:width .6s ease}
+.ratio .exp{font-size:11.5px;color:var(--muted);line-height:1.55;border-top:1px solid var(--line-soft);padding-top:11px}
+.ratio .sc{font-family:'Inter';font-weight:700;font-size:14px}
+
+/* ===== Tables / charts ===== */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:9px 10px}
+thead th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;border-bottom:1px solid var(--line-soft)}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.035)}
+td.num,th.num{text-align:right;font-family:'Inter';font-variant-numeric:tabular-nums}
+.chart-box{position:relative;height:300px}
+.chart-box.sm{height:240px}
+.legend{display:flex;flex-wrap:wrap;gap:11px 18px;margin-top:16px}
+.legend .li{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--cream)}
+.legend .sw{width:11px;height:11px;border-radius:4px}
+
+/* ===== Recommendations ===== */
+.rec{display:flex;gap:14px;padding:16px 18px;border-radius:var(--radius-sm);border:1px solid var(--line-soft);background:rgba(255,255,255,.018);margin-bottom:12px}
+.rec .ic{width:34px;height:34px;border-radius:11px;flex:0 0 auto;display:grid;place-items:center;font-size:15px;font-family:'Inter'}
+.rec.ok .ic{background:rgba(116,174,132,.14);color:var(--ok)}
+.rec.warn .ic{background:rgba(215,174,94,.14);color:var(--warn)}
+.rec.risk .ic{background:rgba(199,107,98,.14);color:var(--risk)}
+.rec .body h4{font-size:13.5px;color:var(--white);font-weight:600;margin-bottom:4px}
+.rec .body p{font-size:12.5px;color:var(--muted);line-height:1.6}
+
+/* ===== Goals ===== */
+.goal-row{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--line-soft)}
+.goal-row:last-child{border-bottom:none}
+.goal-pri{width:30px;height:30px;border-radius:10px;flex:0 0 auto;display:grid;place-items:center;background:rgba(200,167,101,.13);color:var(--gold);font-weight:700;font-family:'Inter';font-size:14px}
+.goal-row .gn{flex:1;font-size:13.5px;color:var(--cream)}
+.goal-row .gy{font-size:12px;color:var(--muted)}
+.goal-row .ga{font-family:'Inter';font-weight:600;color:var(--white);font-size:13.5px}
+
+/* ===== Forms ===== */
+.form-page{max-width:1180px}
+.fgroup{margin-bottom:28px}
+.fgroup-h{font-size:13px;color:var(--gold);font-weight:600;letter-spacing:.03em;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.fgroup-h .tag{font-family:'Inter';font-size:11px;background:rgba(200,167,101,.1);padding:3px 9px;border-radius:8px;color:var(--gold-soft)}
+.field-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 18px}
+.field{display:flex;flex-direction:column;gap:7px}
+.field label{font-size:12px;color:var(--muted);display:flex;align-items:center}
+.field input,.field select,.field textarea{background:rgba(0,0,0,.28);border:1px solid var(--line-soft);border-radius:12px;padding:11px 13px;color:var(--white);font-size:13.5px;transition:.15s;width:100%}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--gold);background:rgba(0,0,0,.42)}
+.field input::placeholder{color:#4f5a70}
+.field.money input{text-align:right;font-family:'Inter';font-variant-numeric:tabular-nums}
+.subtotal{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:13px;border-top:1px solid var(--line-soft);font-size:13px}
+.subtotal b{font-family:'Inter';color:var(--gold);font-size:16px}
+.grand{border-top:1px solid var(--line)}
+.grand span{color:var(--white);font-size:14px}.grand b{font-size:18px}
+.calc-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(200,167,101,.045);border:1px dashed var(--line);border-radius:14px;padding:13px 15px;margin-top:8px}
+.calc-row .res{margin-left:auto;font-family:'Inter';font-weight:700;color:var(--gold)}
+.mini{display:flex;flex-direction:column;gap:5px;width:120px}
+.mini label{font-size:11px;color:var(--muted)}
+.mini input{background:rgba(0,0,0,.28);border:1px solid var(--line-soft);border-radius:9px;padding:7px 9px;color:#fff;font-size:13px;text-align:right;font-family:'Inter'}
+.note{font-size:12px;color:var(--muted);background:rgba(255,255,255,.025);border-left:2px solid var(--gold);padding:11px 15px;border-radius:10px;margin-top:10px;line-height:1.65}
+.form-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:26px;padding-top:20px;border-top:1px solid var(--line-soft)}
+.form-nav .btn{padding:12px 24px;font-size:14px}
+.form-nav .step-dots{display:flex;gap:7px}
+.form-nav .step-dots i{width:8px;height:8px;border-radius:50%;background:rgba(213,205,183,.18)}
+.form-nav .step-dots i.on{background:var(--gold);width:22px;border-radius:99px}
+
+
+/* ===== Info tooltip ===== */
+.tip{position:relative;display:inline-flex;margin-left:6px;vertical-align:middle}
+.tip .i{width:15px;height:15px;border-radius:50%;border:1px solid var(--gold-soft);color:var(--gold-soft);font-size:10px;line-height:1;display:grid;place-items:center;cursor:help;font-style:normal;font-family:'Inter';font-weight:600}
+.tip .bub{position:absolute;top:24px;left:50%;transform:translateX(-50%);background:var(--navy-3);color:var(--cream);border:1px solid var(--line);padding:9px 12px;border-radius:12px;font-size:11.5px;width:210px;line-height:1.55;opacity:0;visibility:hidden;transition:.15s;z-index:60;box-shadow:var(--shadow);font-weight:300;text-align:left;pointer-events:none}
+.tip .bub::before{content:"";position:absolute;top:-5px;left:50%;transform:translateX(-50%) rotate(45deg);width:9px;height:9px;background:var(--navy-3);border-left:1px solid var(--line);border-top:1px solid var(--line)}
+.tip:hover .bub{opacity:1;visibility:visible}
+
+/* ===== Year + comparison ===== */
+.year-ctrl{display:flex;align-items:center;gap:8px}
+.yc-label{font-size:11px;color:var(--muted);letter-spacing:.04em}
+#year-select{background:var(--navy-3);border:1px solid var(--line);color:var(--gold);font-weight:700;font-family:'Inter';font-size:15px;padding:8px 14px;border-radius:12px;cursor:pointer}
+#year-select:focus{outline:none;border-color:var(--gold)}
+.cmp-controls{display:flex;align-items:flex-end;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.cmp-controls .field{width:210px}
+.cmp-controls select{background:rgba(0,0,0,.28);border:1px solid var(--line-soft);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:'Inter';font-weight:600}
+.cmp-controls select:focus{outline:none;border-color:var(--gold)}
+.cmp-vs{color:var(--gold-soft);font-size:13px;padding-bottom:12px}
+.cmp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.cmp-card{background:linear-gradient(168deg,var(--navy),#141d31);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:18px}
+.cmp-lbl{font-size:12px;color:var(--muted);margin-bottom:11px}
+.cmp-vals{display:flex;align-items:baseline;gap:8px;font-family:'Inter';font-variant-numeric:tabular-nums}
+.cmp-vals .ya{color:var(--muted);font-size:14px}.cmp-vals .arr{color:var(--gold-soft);font-size:12px}
+.cmp-vals .yb{color:var(--white);font-size:18px;font-weight:700}
+.cmp-delta{margin-top:10px;font-size:13px;font-weight:600;font-family:'Inter'}
+.cmp-delta small{font-weight:400;opacity:.85}
+.cmp-delta.pos{color:var(--ok)}.cmp-delta.neg{color:var(--risk)}
+
+/* ===== Empty state ===== */
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;padding:56px 30px;gap:8px}
+.empty .em-mark{width:74px;height:74px;border-radius:22px;background:rgba(200,167,101,.1);border:1px solid var(--line);display:grid;place-items:center;font-size:32px;color:var(--gold);margin-bottom:10px}
+.empty h2{font-size:22px;color:var(--white);font-weight:600}
+.empty p{font-size:13.5px;color:var(--muted);max-width:460px;line-height:1.7}
+.empty .steps{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:18px 0 6px}
+.empty .step{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.025);border:1px solid var(--line-soft);border-radius:999px;padding:9px 16px;font-size:12.5px;color:var(--cream)}
+.empty .step b{width:20px;height:20px;border-radius:50%;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-size:11px;font-family:'Inter';font-weight:700}
+.empty .cta{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap;justify-content:center}
+
+.page{display:none;animation:fade .35s ease}
+.page.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.menu-btn{display:none}
+
+@media (max-width:1180px){
+  .kpi-grid{grid-template-columns:repeat(3,1fr)}
+  .ratio-grid{grid-template-columns:repeat(2,1fr)}
+  .hero-score{grid-template-columns:1fr;gap:18px}
+  .cmp-grid{grid-template-columns:repeat(2,1fr)}
+  .field-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:-280px;z-index:60;transition:.25s;width:262px}
+  .sidebar.open{left:0}
+  .topbar{padding:14px 18px}.content{padding:22px 18px 64px}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .balance{grid-template-columns:1fr;gap:10px}.bal-op{display:none}
+  .menu-btn{display:inline-flex!important}
+  .topbar .right{gap:12px}.meta{display:none}
+}
+@media print{
+  body { background:#fff !important; color:#000 !important; }
+  .app, .sidebar, .topbar, .content { display:none !important; }
+  #print-report { display:block !important; width:100% !important; }
+}
+
+/* Modal overlay styling */
+.modal {
+  display: flex;
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 11, 19, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-content {
+  background: linear-gradient(165deg, var(--navy) 0%, var(--navy-2) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 32px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 14px;
+}
+.modal-header h3 {
+  color: var(--white);
+  font-size: 18px;
+}
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 20px;
+  cursor: pointer;
+  transition: .15s;
+}
+.modal-close:hover {
+  color: var(--white);
+}
+
+/* Mode selector segmented control */
+.mode-selector {
+  display: flex;
+  background: rgba(0, 0, 0, 0.24);
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  padding: 3px;
+  margin-bottom: 16px;
+}
+.mode-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: .15s;
+  font-weight: 500;
+  text-align: center;
+}
+.mode-btn.active {
+  background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+  color: var(--navy);
+  font-weight: 600;
+}
+
+/* Client library styles */
+.client-library-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.client-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+.client-card {
+  background: linear-gradient(165deg, var(--navy) 0%, var(--navy-2) 100%);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.client-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--gold);
+}
+.client-card-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.client-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--white);
+}
+.client-score {
+  font-size: 24px;
+  font-weight: 800;
+  font-family: 'Inter';
+}
+.client-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+  padding: 10px 0;
+}
+.client-meta-item b {
+  color: var(--cream);
+  font-family: 'Inter';
+}
+.client-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Redesigned Snapshot layout */
+.snapshot-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.snapshot-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.snapshot-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  padding: 18px;
+}
+.snapshot-card.dominant {
+  background: linear-gradient(135deg, rgba(200,167,101,0.15), rgba(200,167,101,0.03));
+  border: 1px solid var(--line);
+}
+.snapshot-val {
+  font-family: 'Inter';
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--white);
+}
+.snapshot-val.dominant {
+  font-size: 32px;
+  color: var(--gold);
+}
+.cashflow-progress-container {
+  margin-top: 12px;
+}
+.cashflow-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.cashflow-bar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  overflow: hidden;
+  display: flex;
+}
+
+.tax-tag {
+  font-size: 10px;
+  background: rgba(200, 167, 101, 0.15);
+  color: var(--gold);
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-left: auto;
+  font-weight: 500;
+  display: inline-block;
+}
+
+#print-report {
+  display: none;
+}
+@media (max-width: 860px) {
+  .snapshot-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 480px) {
+  .snapshot-val {
+    font-size: 14px !important;
+  }
+  .snapshot-val.dominant {
+    font-size: 26px !important;
+  }
+  .cashflow-legend {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+}
+</style>
+</head>
+<body>
+  <div class="app">
+  <!-- ===== Sidebar ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="mark">TW</div>
+      <div><div class="bt">Team Wealth Plan</div><div class="bs">Private Wealth</div></div>
+    </div>
+    <div class="nav-label">ภาพรวม</div>
+    <div class="nav-item active" data-page="dashboard"><span class="ic">◆</span>Dashboard</div>
+    
+    <div class="nav-item" data-page="health"><span class="ic">♥</span>สุขภาพการเงิน</div>
+    
+    <div class="nav-item" data-page="reco"><span class="ic">✎</span>คำแนะนำ</div>
+    <div class="nav-label">กรอกข้อมูล</div>
+    <div class="nav-item" data-page="income"><span class="ic">↑</span>รายได้</div>
+    <div class="nav-item" data-page="expenses"><span class="ic">↓</span>ค่าใช้จ่าย</div>
+    <div class="nav-item" data-page="assets"><span class="ic">▣</span>สินทรัพย์</div>
+    <div class="nav-item" data-page="debts"><span class="ic">▤</span>หนี้สิน</div>
+    <div class="nav-item" data-page="goals"><span class="ic">✦</span>เป้าหมาย</div>
+    <div class="nav-item" data-page="profile"><span class="ic">◷</span>ข้อมูลส่วนตัว</div>
+    <div class="spacer"></div>
+    <div class="side-actions">
+      <button class="btn sm gold" onclick="exportData()"><span>⭳</span> บันทึกไฟล์ข้อมูลของฉัน</button>
+      <button class="btn sm" onclick="triggerPrint()"><span>⎙</span> ส่งออก PDF</button>
+      <button class="btn sm ghost" onclick="clearData()"><span>○</span> ล้างข้อมูลปีนี้</button>
+    </div>
+  </aside>
+
+  <!-- ===== Main ===== -->
+  <main class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:14px">
+        <button class="btn sm menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <div>
+          <h1 id="topbar-title">Financial OPD Dashboard</h1>
+          <div class="sub" id="topbar-sub">เครื่องมือวิเคราะห์และวางแผนการเงินส่วนบุคคล</div>
+        </div>
+      </div>
+      <!-- Mode Selector Segmented Control -->
+      
+      <div class="right">
+        <div class="year-ctrl">
+          <span class="yc-label">รอบปี (พ.ศ.)</span>
+          <select id="year-select" onchange="switchYear(this.value)"></select>
+          <button class="btn sm" title="เพิ่มรอบปีใหม่" onclick="addYear()">＋ ปี</button>
+          <button class="btn sm ghost" title="ลบรอบปีนี้" onclick="deleteYear()">ลบปี</button>
+        </div>
+        <div class="meta"><div>อัปเดตล่าสุด <b id="tb-updated">—</b></div></div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ============ WELCOME ============ -->
+      <section class="page active" id="page-welcome">
+        <div class="card empty" style="padding: 40px; text-align: center; max-width: 700px; margin: 40px auto;">
+          <div style="font-size: 50px; margin-bottom: 20px;">📋</div>
+          <h2 style="color: var(--white); font-size: 26px; font-weight: 700; margin-bottom: 12px;">เครื่องมือประเมินสุขภาพการเงินส่วนบุคคล</h2>
+          <div style="color: var(--gold); font-size: 14px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 20px;">Team Wealth Plan — Private Wealth</div>
+          <p style="color: var(--muted); font-size: 14.5px; line-height: 1.6; margin-bottom: 30px; text-align: left;">
+            ยินดีต้อนรับสู่ระบบจัดทำข้อมูล Financial OPD เครื่องมือนี้จะช่วยคุณประเมินสถานะทางการเงินในปัจจุบันและวิเคราะห์ความแข็งแรงทางการเงินแบบ 5 มิติ กรุณากรอกข้อมูลทางการเงินให้ครบถ้วนในแต่ละขั้นตอน ระบบจะใช้เวลาในการกรอกประมาณ 10-15 นาที 
+            <br><br>
+            <b>🔒 ความเป็นส่วนตัวสูงสุด:</b> ข้อมูลทั้งหมดที่คุณกรอกจะถูกจัดเก็บไว้ในเบราว์เซอร์บนเครื่องของคุณเท่านั้น ไม่มีการส่งข้อมูลขึ้นอินเทอร์เน็ตหรือระบบคลาวด์ใดๆ คุณสามารถกลับมาทำต่อได้ตลอดเวลา และหลังจากทำเสร็จ กรุณาคลิกปุ่ม <b>"บันทึกไฟล์ข้อมูลของฉัน"</b> เพื่อนำส่งข้อมูลให้กับที่ปรึกษาทางการเงินของคุณ
+          </p>
+          <div class="cta" style="display: flex; gap: 12px; justify-content: center;">
+            <button class="btn gold" style="padding: 14px 32px;" onclick="goPage('profile')">เริ่มกรอกข้อมูลการเงิน →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ DASHBOARD ============ -->
+      <section class="page" id="page-dashboard">
+        <!-- empty state -->
+        <div id="dash-empty" style="display:none">
+          <div class="card empty">
+            <div class="em-mark">✎</div>
+            <h2>เริ่มประเมินสุขภาพการเงินของคุณ</h2>
+            <p>กรอกข้อมูลการเงินของคุณเพียงครั้งเดียว ระบบจะคำนวณคะแนนสุขภาพการเงิน อัตราส่วนสำคัญ และคำแนะนำให้โดยอัตโนมัติ — เลื่อนเมาส์ไปที่ไอคอน <b style="color:var(--gold)">ⓘ</b> ในแต่ละช่องเพื่อดูคำอธิบายว่าต้องกรอกอะไร</p>
+            <div class="steps">
+              <div class="step"><b>1</b> รายได้</div>
+              <div class="step"><b>2</b> ค่าใช้จ่าย</div>
+              <div class="step"><b>3</b> สินทรัพย์</div>
+              <div class="step"><b>4</b> หนี้สิน</div>
+              <div class="step"><b>5</b> ดูผลลัพธ์</div>
+            </div>
+            <div class="cta">
+              <button class="btn gold" onclick="goPage('income')">เริ่มกรอกข้อมูล →</button>
+              <button class="btn" onclick="resetData()">ดูตัวอย่างก่อน</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- body -->
+        <div id="dash-body">
+          <!-- Section 1: Health Score Summary -->
+          <div class="card" style="margin-bottom: 20px; padding: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                <div id="dash-score-compact" style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 0 0 auto;"></div>
+                <div>
+                  <div style="font-size: 12px; color: var(--gold-soft); letter-spacing: 0.04em;">ภาพรวมคะแนนสุขภาพการเงิน</div>
+                  <h2 id="dash-health-title" style="font-size: 20px; color: var(--white); font-weight: 600; margin-top: 4px;"></h2>
+                  <p id="dash-health-desc" style="font-size: 13px; color: var(--muted); margin-top: 4px; max-width: 600px;"></p>
+                </div>
+              </div>
+              <button class="btn gold" onclick="goPage('health')">ดูรายละเอียดสุขภาพการเงิน →</button>
+            </div>
+          </div>
+
+          <!-- Section 2: Financial Snapshot -->
+          <div class="section-title"><h2>ภาพรวมการเงิน (Financial Snapshot)</h2><div class="ln"></div></div>
+          <div class="snapshot-grid" id="dash-snapshot">
+            <!-- Left Block: Cashflow -->
+            <div class="card snapshot-block">
+              <div class="card-h"><h3>กระแสเงินสดรายปี (Cashflow)</h3><span class="eyebrow">Income &amp; Outflow</span></div>
+              <div style="display: flex; flex-direction: column; gap: 16px;">
+                
+                <!-- Horizontal Cashflow Bar at the top of the card -->
+                <div class="cashflow-progress-container" style="margin-top: 0;">
+                  <div class="cashflow-bar" style="height: 16px; background: rgba(255, 255, 255, 0.08); border-radius: 99px; overflow: hidden; display: flex; margin-bottom: 10px;">
+                    <div id="cashflow-bar-savings" style="width: 0%; background: var(--gold); transition: width 0.3s;" title="ออม/ลงทุน"></div>
+                    <div id="cashflow-bar-fixed" style="width: 0%; background: var(--gold-soft); transition: width 0.3s;" title="ค่าใช้จ่ายคงที่"></div>
+                    <div id="cashflow-bar-variable" style="width: 0%; background: var(--cream); opacity: 0.8; transition: width 0.3s;" title="ค่าใช้จ่ายผันแปร"></div>
+                    <div id="cashflow-bar-net" style="width: 0%; background: var(--ok); transition: width 0.3s;" title="คงเหลือสุทธิ"></div>
+                  </div>
+                  
+                  <!-- Legend / Labels -->
+                  <div class="cashflow-legend" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 11.5px; background: rgba(255, 255, 255, 0.02); padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--line-soft);">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--gold);"></span>
+                      <span style="color: var(--muted);">ออม/ลงทุน:</span>
+                      <span id="cashflow-pct-savings" style="color: var(--gold); font-weight: 600; margin-left: auto;">0%</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--gold-soft);"></span>
+                      <span style="color: var(--muted);">ค่าใช้จ่ายคงที่:</span>
+                      <span id="cashflow-pct-fixed" style="color: var(--cream); font-weight: 600; margin-left: auto;">0%</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--cream); opacity: 0.8;"></span>
+                      <span style="color: var(--muted);">ค่าใช้จ่ายผันแปร:</span>
+                      <span id="cashflow-pct-variable" style="color: var(--cream); font-weight: 600; margin-left: auto;">0%</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <span id="legend-dot-net" style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--ok);"></span>
+                      <span id="legend-lbl-net" style="color: var(--muted);">คงเหลือสุทธิ:</span>
+                      <span id="cashflow-pct-net" style="color: var(--ok); font-weight: 600; margin-left: auto;">0%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3 small cards below the bar -->
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 4px;">
+                  <div class="snapshot-card" style="padding: 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; min-height: 80px;">
+                    <div style="color: var(--muted); font-size: 11px; margin-bottom: 6px; line-height: 1.2;">รายได้รวมต่อปี</div>
+                    <div class="snapshot-val" id="snap-income" style="font-size: 15px; color: var(--gold); word-break: break-all;">฿0</div>
+                  </div>
+                  <div class="snapshot-card" style="padding: 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; min-height: 80px;">
+                    <div style="color: var(--muted); font-size: 11px; margin-bottom: 6px; line-height: 1.2;">ค่าใช้จ่ายรวมต่อปี</div>
+                    <div class="snapshot-val" id="snap-expenses" style="font-size: 15px; color: var(--cream); word-break: break-all;">฿0</div>
+                  </div>
+                  <div class="snapshot-card" style="padding: 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; min-height: 80px;">
+                    <div style="color: var(--muted); font-size: 11px; margin-bottom: 6px; line-height: 1.2;">กระแสเงินสดสุทธิ</div>
+                    <div class="snapshot-val" id="snap-netflow" style="font-size: 15px; word-break: break-all;">฿0</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Right Block: Balance Sheet -->
+            <div class="card snapshot-block">
+              <div class="card-h"><h3>งบดุลส่วนบุคคล (Balance Sheet)</h3><span class="eyebrow">Net Worth</span></div>
+              <div style="display: flex; flex-direction: column; gap: 14px; height: 100%; justify-content: space-between;">
+                
+                <!-- Equation Layout: assets - debts = net worth -->
+                <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; text-align: center;">
+                  <div class="snapshot-card" style="padding: 12px; display: flex; flex-direction: column; justify-content: center; min-height: 80px;">
+                    <div style="color: var(--muted); font-size: 11px; margin-bottom: 4px;">สินทรัพย์รวม</div>
+                    <div class="snapshot-val" id="snap-assets" style="color: var(--ok); font-size: 18px; word-break: break-all;">฿0</div>
+                  </div>
+                  
+                  <div style="font-size: 20px; color: var(--muted); font-weight: bold; margin-bottom: 2px;">−</div>
+                  
+                  <div class="snapshot-card" style="padding: 12px; display: flex; flex-direction: column; justify-content: center; min-height: 80px;">
+                    <div style="color: var(--muted); font-size: 11px; margin-bottom: 4px;">หนี้สินรวม</div>
+                    <div class="snapshot-val" id="snap-debts" style="color: var(--risk); font-size: 18px; word-break: break-all;">฿0</div>
+                  </div>
+                </div>
+                
+                <div style="text-align: center; margin: -4px 0 -8px 0; color: var(--muted); font-size: 16px; font-weight: bold;">=</div>
+                
+                <div class="snapshot-card dominant" style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1; justify-content: center; align-items: center; padding: 18px 12px; min-height: 120px;">
+                  <div class="nw-eyebrow" style="font-size: 10px; letter-spacing: 0.18em; color: var(--gold); font-weight: 700; text-transform: uppercase;">NET WORTH</div>
+                  <div style="color: var(--cream); font-size: 13px;">ความมั่งคั่งสุทธิ</div>
+                  <div class="snapshot-val dominant" id="snap-networth" style="font-size: 34px; margin: 4px 0; word-break: break-all;">฿0</div>
+                  <div style="font-size: 11px; color: var(--gold-soft); text-align: center;">สินทรัพย์ หักลบ หนี้สิน (ความมั่งคั่งที่แท้จริงของคุณ)</div>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Asset & Debt Breakdown -->
+          <div class="section-title"><h2>สินทรัพย์และหนี้สิน</h2><div class="ln"></div></div>
+          <div class="grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 24px;">
+            <!-- Asset Donut Card -->
+            <div class="card">
+              <div class="card-h"><h3>สัดส่วนประเภทสินทรัพย์</h3><span class="eyebrow">Asset Allocation</span></div>
+              <div class="chart-box sm"><canvas id="ch-asset"></canvas></div>
+              <div class="legend" id="asset-legend"></div>
+            </div>
+
+            <!-- Debt Structure Card -->
+            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div class="card-h"><h3>โครงสร้างหนี้สิน &amp; ภาระหนี้</h3><span class="eyebrow">Debt Breakdown</span></div>
+              <div class="grid" style="grid-template-columns: 1.2fr 1fr; gap: 16px; align-items: center;">
+                <div class="chart-box sm" style="height: 180px;"><canvas id="ch-debt"></canvas></div>
+                <div style="display: flex; flex-direction: column; gap: 10px; font-size: 12.5px;">
+                  <div id="debt-snap-stat-1"></div>
+                  <div id="debt-snap-stat-2"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Recommendations -->
+          <div class="section-title"><h2>คำแนะนำสำคัญ</h2><div class="ln"></div></div>
+          <div class="card" style="margin-bottom: 24px;">
+            <div class="card-h"><h3>Planner Insight (คำแนะนำสุขภาพการเงิน)</h3><span class="eyebrow">Recommendations</span></div>
+            <div id="reco-mini" style="margin-bottom: 16px;"></div>
+            <button class="btn ghost sm" onclick="goPage('reco')" style="align-self: flex-start;">ดูคำแนะนำทั้งหมด →</button>
+          </div>
+
+          <!-- Section 5: Goals -->
+          <div class="section-title"><h2>เป้าหมาย</h2><div class="ln"></div></div>
+          <div class="card" style="margin-bottom: 24px;">
+            <div class="card-h"><h3>เป้าหมายสำคัญ</h3><span class="eyebrow">Goals</span></div>
+            <div id="goal-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ HEALTH ============ -->
+      <section class="page" id="page-health">
+        <div class="grid" style="grid-template-columns:1fr 1fr">
+          <div class="card" style="display:flex;flex-direction:column;justify-content:center;align-items:center">
+            <div class="card-h" style="width:100%"><h3>คะแนนสุขภาพการเงินโดยรวม</h3><span class="eyebrow">0 – 100</span></div>
+            <div class="score-wrap" id="score-card-2"></div>
+          </div>
+          <div class="card"><div class="card-h"><h3>สรุปสถานะ 5 อัตราส่วน</h3></div><div class="chart-box"><canvas id="ch-ratio"></canvas></div></div>
+        </div>
+        <div class="section-title"><h2>รายละเอียดอัตราส่วนการเงิน</h2><div class="ln"></div></div>
+        <div id="ratio-detail"></div>
+      </section>
+
+      <!-- ============ COMPARE ============ -->
+      <section class="page" id="page-compare">
+        <!-- compare empty state -->
+        <div id="compare-empty" style="display:none">
+          <div class="card empty">
+            <div class="em-mark">⇄</div>
+            <h2>ไม่พบข้อมูลปีก่อนหน้า</h2>
+            <p>ยังไม่มีข้อมูลปีก่อนหน้า กรุณาเพิ่มปีใหม่หรือนำเข้าไฟล์ข้อมูลที่มีหลายปีเพื่อเปรียบเทียบ</p>
+          </div>
+        </div>
+        
+        <!-- compare content -->
+        <div id="compare-body">
+          <div class="card">
+            <div class="card-h"><h3 id="cmp-head">เปรียบเทียบปี</h3><span class="eyebrow">Year-over-Year</span></div>
+            <div class="cmp-grid" id="cmp-cards"></div>
+            <div class="note">สีเขียว = พัฒนาการที่ดีขึ้น · สีแดง = ถดถอย (สำหรับหนี้สิน/ค่าใช้จ่าย ค่าที่ลดลงถือว่าดีขึ้น)</div>
+          </div>
+          <div class="section-title"><h2>แนวโน้มความมั่งคั่งหลายปี · Multi-year Trend</h2><div class="ln"></div></div>
+          <div class="card"><div class="chart-box"><canvas id="ch-trend"></canvas></div></div>
+          
+          <!-- Collapsible detail comparison -->
+          <div style="margin-top: 24px; text-align: center;">
+            <button class="btn" onclick="toggleCompareDetails()" id="btn-toggle-compare-details">ดูรายละเอียดเพิ่มเติม</button>
+          </div>
+          <div id="compare-details-block" style="display:none; margin-top: 20px;">
+            <div class="section-title"><h2>เปรียบเทียบรายหมวด · A vs B</h2><div class="ln"></div></div>
+            <div class="card"><div class="chart-box"><canvas id="ch-cmp"></canvas></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ RECO ============ -->
+      <section class="page" id="page-reco">
+        <div class="card form-page">
+          <div class="card-h"><h3>คำแนะนำการวางแผนการเงิน · Recommendations</h3><span class="eyebrow">Planner Insight</span></div>
+          <div id="reco-full"></div>
+        </div>
+      </section>
+
+      <!-- ============ INCOME ============ -->
+      <section class="page" id="page-income">
+        <div class="card form-page">
+          <div class="card-h"><h3>รายได้ · Income</h3><span class="eyebrow">ขั้นที่ 2 / 6</span></div>
+          <div id="form-income"></div>
+          <div class="form-nav">
+            <button class="btn ghost" onclick="goPage('profile')">← ย้อนกลับ</button>
+            <div class="step-dots"><i></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
+            <button class="btn gold" onclick="goPage('expenses')">ถัดไป: ค่าใช้จ่าย →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ EXPENSES ============ -->
+      <section class="page" id="page-expenses">
+        <div class="card form-page">
+          <div class="card-h"><h3>ค่าใช้จ่าย · Expenses</h3><span class="eyebrow">ขั้นที่ 3 / 6</span></div>
+          <div id="form-expenses"></div>
+          <div class="form-nav">
+            <button class="btn ghost" onclick="goPage('income')">← ย้อนกลับ</button>
+            <div class="step-dots"><i></i><i></i><i class="on"></i><i></i><i></i><i></i></div>
+            <button class="btn gold" onclick="goPage('assets')">ถัดไป: สินทรัพย์ →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ASSETS ============ -->
+      <section class="page" id="page-assets">
+        <div class="card form-page">
+          <div class="card-h"><h3>สินทรัพย์ · Assets</h3><span class="eyebrow">ขั้นที่ 4 / 6</span></div>
+          <div id="form-assets"></div>
+          <div class="form-nav">
+            <button class="btn ghost" onclick="goPage('expenses')">← ย้อนกลับ</button>
+            <div class="step-dots"><i></i><i></i><i></i><i class="on"></i><i></i><i></i></div>
+            <button class="btn gold" onclick="goPage('debts')">ถัดไป: หนี้สิน →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ DEBTS ============ -->
+      <section class="page" id="page-debts">
+        <div class="card form-page">
+          <div class="card-h"><h3>หนี้สิน · Debts</h3><span class="eyebrow">ขั้นที่ 5 / 6</span></div>
+          <div id="form-debts"></div>
+          <div class="form-nav">
+            <button class="btn ghost" onclick="goPage('assets')">← ย้อนกลับ</button>
+            <div class="step-dots"><i></i><i></i><i></i><i></i><i class="on"></i><i></i></div>
+            <button class="btn gold" onclick="goPage('goals')">ถัดไป: เป้าหมาย →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ GOALS ============ -->
+      <section class="page" id="page-goals">
+        <div class="card form-page"><div class="card-h"><h3>เป้าหมายสำคัญ · Goals</h3><span class="eyebrow">ขั้นที่ 6 / 6</span></div><div id="form-goals"></div>
+          <div class="form-nav">
+            <button class="btn ghost" onclick="goPage('debts')">← ย้อนกลับ</button>
+            <div class="step-dots"><i></i><i></i><i></i><i></i><i></i><i class="on"></i></div>
+            <button class="btn gold" onclick="goPage('dashboard')">เสร็จสิ้น · ดูผลลัพธ์ →</button>
+          </div></div>
+      </section>
+
+      <!-- ============ PROFILE ============ -->
+      <section class="page" id="page-profile">
+        <div class="card form-page"><div class="card-h"><h3>ข้อมูลส่วนตัว · Profile</h3><span class="eyebrow">ขั้นที่ 1 / 6</span></div><div id="form-profile"></div>
+          <div class="form-nav">
+            <button class="btn ghost" onclick="goPage('welcome')">← ย้อนกลับ</button>
+            <div class="step-dots"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+            <button class="btn gold" onclick="goPage('income')">ถัดไป: รายได้ →</button>
+          </div>
+        <div class="note">ส่วนนี้ขั้นที่ 1 / 6 ใช้ประกอบบริบทการวางแผนเท่านั้น และไม่มีผลต่อการคำนวณคะแนน</div></div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- Modal สำหรับสร้างลูกค้าใหม่ -->
+<div id="new-client-modal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width: 450px;">
+    <div class="modal-header">
+      <h3>สร้างลูกค้าใหม่</h3>
+      <button class="modal-close" onclick="closeNewClientModal()">✕</button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <div class="field">
+        <label>ชื่อลูกค้า</label>
+        <input type="text" id="new-client-name" placeholder="ระบุชื่อลูกค้า เช่น นายสมชาย">
+      </div>
+      <div class="field">
+        <label>รอบปีเริ่มต้น (พ.ศ.)</label>
+        <input type="text" id="new-client-year" value="2567" placeholder="ระบุปี พ.ศ.">
+      </div>
+    </div>
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+      <button class="btn ghost" onclick="closeNewClientModal()">ยกเลิก</button>
+      <button class="btn gold" onclick="submitNewClient()">สร้างเคส</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal สำหรับแสดงข้อมูลก่อนนำเข้า (Import Preview) -->
+<div id="import-preview-modal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width: 650px;">
+    <div class="modal-header">
+      <h3>พรีวิวไฟล์ข้อมูลสำหรับนำเข้า (Import Preview)</h3>
+      <button class="modal-close" onclick="closeImportPreview()">✕</button>
+    </div>
+    
+    <div style="font-size: 13.5px; color: var(--muted); line-height: 1.6;">
+      กรุณาตรวจสอบข้อมูลลูกค้าที่เลือกนำเข้า ระบบจำกัดเฉพาะไฟล์ข้อมูลที่ถูกต้องของ Team Wealth Plan เท่านั้น
+    </div>
+    
+    <div id="import-preview-list" style="display: flex; flex-direction: column; gap: 14px; max-height: 45vh; overflow-y: auto; margin: 10px 0; padding-right: 8px;">
+      <!-- Previews of selected files will go here -->
+    </div>
+    
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+      <button class="btn ghost" onclick="closeImportPreview()">ยกเลิก</button>
+      <button class="btn gold" id="btn-import-confirm" onclick="processImports()">นำเข้าทั้งหมดที่ถูกต้อง</button>
+    </div>
+  </div>
+</div>
+
+<!-- Container สำหรับออกรายงาน PDF (Print Only) -->
+<div id="print-report"></div>
+
+<script>
+
+/* =========================================================
+   SAMPLE (อ้างอิง OPD Card 2569) — ใช้กับปุ่ม “ดูข้อมูลตัวอย่าง”
+   ========================================================= */
+function sampleState(){
+  return {
+    profile:{ name:"นายบริหาร", birthdate:"1981-05-15", age:42, occupation:"รับจ้าง/ผู้บริหารฝ่าย", workplace:"บมจ.บริหาร", status:"สมรส",
+      spouseName:"นางแสนสุข", spouseBirthdate:"1981-08-20", spouseOccupation:"แม่บ้าน", spouseWorkplace:"-",
+      childrenList:[{name:"บุตรคนโต",birthdate:"2017-03-10"},{name:"บุตรคนเล็ก",birthdate:"2019-06-01"}],
+      fatherName:"สำราญ", fatherAge:70, fatherHealth:"เบาหวาน", motherName:"สำเริง", motherAge:70, motherHealth:"ความดัน", planningYear:"2567" },
+    goals:[
+      {name:"การศึกษาบุตรคนโต — ปริญญาตรี (ไทย)", target:2000000, year:"2575", notes:""},
+      {name:"การศึกษาบุตรคนเล็ก — ปริญญาตรี (ไทย)", target:2000000, year:"2577", notes:""},
+      {name:"ประหยัดภาษี", target:0, year:"ทุกปี", notes:"วางแผนลดหย่อนภาษี"},
+      {name:"เกษียณ อายุ 60 ปี", target:20000000, year:"2584", notes:""},
+      {name:"", target:0, year:"", notes:""},{name:"", target:0, year:"", notes:""},{name:"", target:0, year:"", notes:""}
+    ],
+    income:{ salaryMonthly:150000, bonusAmount:600000, increasePct:4, interest:0, dividend:0, rental:1200000, assetSale:0, freelance:0, business:0, other:0, otherCategory:'40(8)' },
+    pf:{ contributionPct:8, returnPct:5 },
+    expenses:{
+      savings:{ savings:0, fixedDepositSaving:0, investment:0, rmf:0, thaiesg:0, other:0 },
+      fixed:{ mortgage:240000, car:144000, insurance:25000, socialSecurity:9000, other:0 },
+      variable:{ food:240000, utilities:72000, phone:24000, transport:84000, parents:96000, travel:120000, clothes:60000, tax:0, tuition:0, childrenOther:60000, housekeeper:84000, other:0 }
+    },
+    assets:{
+      liquid:{ cash:200000, savingsAccount:500000, fixedDeposit:500000, coop:0, other:0 },
+      investment:{ bond:0, fund:0, stock:2000000, gold:0, crypto:0, realEstate:0, pvd:800000, rmfssf:0, thaiesg:0, gsbLottery:0, insuranceCash:0, other:0 },
+      personal:{ home:6000000, car:800000, jewelry:0, luxuryItems:0, collectibles:0, other:0 }
+    },
+    debts:{
+      shortTerm:{ utility:0, creditCard:0, shortLoan:0, other:0 },
+      longTerm:{ autoLoan:0, mortgage:1200000, installment:0, other:0 },
+      payments:{ mortgagePayment:240000, carPayment:144000, otherPayment:0 }
+    },
+    updated:new Date().toISOString()
+  };
+}
+
+function ageFromBD(bd){ if(!bd)return null; const d=new Date(bd); if(isNaN(d.getTime()))return null; const t=new Date(); let a=t.getFullYear()-d.getFullYear(); const m=t.getMonth()-d.getMonth(); if(m<0||(m===0&&t.getDate()<d.getDate()))a--; return (a>=0&&a<140)?a:null; }
+
+function normalizeInvestment(inv){ inv=inv||{}; const v=k=>(+inv[k]||0); return {
+  bond:v('bond')+v('bonds'), fund:v('fund')+v('mutual'), stock:v('stock')+v('common')+v('preferred'),
+  gold:v('gold'), crypto:v('crypto'), realEstate:v('realEstate'),
+  pvd:v('pvd')+v('providentFund')+v('retirement'), rmfssf:v('rmfssf'), thaiesg:v('thaiesg')+v('tesg'),
+  gsbLottery:v('gsbLottery'), insuranceCash:v('insuranceCash'), other:v('other') }; }
+
+function normalizePersonal(p){ p=p||{}; const v=k=>(+p[k]||0); return {home:v('home'),car:v('car'),jewelry:v('jewelry'),luxuryItems:v('luxuryItems'),collectibles:v('collectibles'),other:v('other')}; }
+
+function ensureRec(rec){
+  if(!rec) return rec;
+  if(!rec.profile) rec.profile={};
+  if(!('birthdate' in rec.profile)) rec.profile.birthdate='';
+  if(!('spouseBirthdate' in rec.profile)) rec.profile.spouseBirthdate=(rec.profile.spouseBirthdate||'');
+  if(!Array.isArray(rec.profile.childrenList)) rec.profile.childrenList=[];
+  
+  if(!rec.assets) rec.assets={ liquid:{}, investment:{}, personal:{} };
+  if(!rec.assets.liquid) rec.assets.liquid = {};
+  if(!rec.assets.investment) rec.assets.investment = {};
+  if(!rec.assets.personal) rec.assets.personal = {};
+  
+  rec.assets.investment=normalizeInvestment(rec.assets.investment); 
+  rec.assets.personal=normalizePersonal(rec.assets.personal); 
+  
+  if(!('gsbLottery' in rec.assets.investment)) rec.assets.investment.gsbLottery = 0;
+  if(!('luxuryItems' in rec.assets.personal)) rec.assets.personal.luxuryItems = 0;
+
+  // Upgrade income
+  if(!rec.income) rec.income={};
+  if('bonusMonths' in rec.income && !('bonusAmount' in rec.income)) {
+    rec.income.bonusAmount = n(rec.income.salaryMonthly) * n(rec.income.bonusMonths);
+  }
+  if(!('bonusAmount' in rec.income)) rec.income.bonusAmount = 0;
+  if(!('salaryMonthly' in rec.income)) rec.income.salaryMonthly = 0;
+  
+  let incomeFields = ['freelance', 'interest', 'dividend', 'rental', 'assetSale', 'business', 'other'];
+  incomeFields.forEach(f => {
+    if (!(f in rec.income)) rec.income[f] = 0;
+  });
+  if (!rec.income.otherCategory) rec.income.otherCategory = '40(8)';
+  
+  // Upgrade expenses
+  if(!rec.expenses) rec.expenses={ savings:{}, fixed:{}, variable:{} };
+  if(!rec.expenses.savings) rec.expenses.savings = {};
+  if(!rec.expenses.fixed) rec.expenses.fixed = {};
+  if(!rec.expenses.variable) rec.expenses.variable = {};
+  
+  // ssf -> thaiesg migration
+  if('ssf' in rec.expenses.savings && !('thaiesg' in rec.expenses.savings)) {
+    rec.expenses.savings.thaiesg = rec.expenses.savings.ssf;
+  }
+  if(!('thaiesg' in rec.expenses.savings)) rec.expenses.savings.thaiesg = 0;
+  
+  // fixedDeposit -> fixedDepositSaving migration
+  if('fixedDeposit' in rec.expenses.savings && !('fixedDepositSaving' in rec.expenses.savings)) {
+    rec.expenses.savings.fixedDepositSaving = rec.expenses.savings.fixedDeposit;
+  }
+  if(!('fixedDepositSaving' in rec.expenses.savings)) rec.expenses.savings.fixedDepositSaving = 0;
+  
+  // tuition: fixed -> variable migration
+  if (rec.expenses.fixed && 'tuition' in rec.expenses.fixed) {
+    if (!rec.expenses.variable) rec.expenses.variable = {};
+    if (!('tuition' in rec.expenses.variable)) {
+      rec.expenses.variable.tuition = rec.expenses.fixed.tuition;
+    }
+    delete rec.expenses.fixed.tuition;
+  }
+  if(!('tuition' in rec.expenses.variable)) rec.expenses.variable.tuition = 0;
+  
+  // Rename children variable
+  if('children' in rec.expenses.variable && !('childrenOther' in rec.expenses.variable)) {
+    rec.expenses.variable.childrenOther = rec.expenses.variable.children;
+  }
+  if(!('childrenOther' in rec.expenses.variable)) rec.expenses.variable.childrenOther = 0;
+  
+  return rec;
+}
+
+function sampleYear2566(){
+  const s=sampleState();
+  s.profile.age=41; s.profile.planningYear="2566";
+  s.income.salaryMonthly=140000; s.income.bonusAmount=420000;
+  s.expenses.variable={food:228000,utilities:66000,phone:24000,transport:78000,parents:96000,travel:84000,clothes:54000,tax:0,tuition:0,childrenOther:48000,housekeeper:84000,other:0};
+  s.assets.liquid={cash:150000,savingsAccount:400000,fixedDeposit:400000,coop:0,other:0};
+  s.assets.investment={bond:0,fund:0,stock:1600000,gold:0,crypto:0,realEstate:0,pvd:660000,rmfssf:0,thaiesg:0,gsbLottery:0,insuranceCash:0,other:0};
+  s.assets.personal={home:6000000,car:900000,jewelry:0,luxuryItems:0,collectibles:0,other:0};
+  s.debts.longTerm={autoLoan:0,mortgage:1350000,installment:0,other:0};
+  s.debts.payments={mortgagePayment:240000,carPayment:144000,otherPayment:0};
+  return s;
+}
+
+function sampleDB(){ return { meta:{activeYear:"2567", compareYear:"2566"}, years:{ "2566":sampleYear2566(), "2567":sampleState() } }; }
+
+/* blank year for client self-entry */
+function blankYear(yearLabel){
+  const s=sampleState();
+  s.profile={name:"",birthdate:"",age:"",occupation:"",workplace:"",status:"",spouseName:"",spouseBirthdate:"",spouseOccupation:"",spouseWorkplace:"",childrenList:[],fatherName:"",fatherAge:"",fatherHealth:"",motherName:"",motherAge:"",motherHealth:"",planningYear:yearLabel||""};
+  s.goals=s.goals.map(()=>({name:"",target:0,year:"",notes:""}));
+  s.income={salaryMonthly:0,bonusAmount:0,increasePct:0,interest:0,dividend:0,rental:0,assetSale:0,freelance:0,business:0,other:0,otherCategory:'40(8)'};
+  s.pf={contributionPct:0,returnPct:0};
+  ['savings','fixed','variable'].forEach(g=>Object.keys(s.expenses[g]).forEach(k=>s.expenses[g][k]=0));
+  ['liquid','investment','personal'].forEach(g=>Object.keys(s.assets[g]).forEach(k=>s.assets[g][k]=0));
+  ['shortTerm','longTerm','payments'].forEach(g=>Object.keys(s.debts[g]).forEach(k=>s.debts[g][k]=0));
+  return s;
+}
+
+function curYearBE(){ return String(new Date().getFullYear()+543); }
+function blankDB(){ const y=curYearBE(); return {meta:{activeYear:y,compareYear:null},years:{[y]:blankYear(y)}}; }
+
+/* =========================================================
+   STATE / PERSISTENCE / MULTI-CLIENT
+   ========================================================= */
+let APP_CLIENTS_KEY = 'twp_opd_client_self';
+let DB = loadClientSelf();
+let state = DB.years[DB.meta.activeYear];
+
+function loadClientSelf() {
+  let db = null;
+  try {
+    let raw = localStorage.getItem(APP_CLIENTS_KEY);
+    if (raw) {
+      db = JSON.parse(raw);
+    }
+  } catch (e) {
+    console.error("Error loading twp_opd_client_self", e);
+  }
+  if (!db || !db.years) {
+    db = blankDB();
+  }
+  if (!db.meta) db.meta = { activeYear: curYearBE(), compareYear: null };
+  if (!db.meta.activeYear) db.meta.activeYear = Object.keys(db.years).sort()[0] || curYearBE();
+  Object.keys(db.years).forEach(y => {
+    db.years[y] = ensureRec(db.years[y]);
+  });
+  return db;
+}
+
+function save() {
+  state.updated = new Date().toISOString();
+  DB.years[DB.meta.activeYear] = state;
+  localStorage.setItem(APP_CLIENTS_KEY, JSON.stringify(DB));
+}
+
+function yearList(){ return Object.keys(DB.years).sort(); }
+
+function switchYear(y){ 
+  if(!DB.years[y])return; 
+  DB.meta.activeYear=y; 
+  state=DB.years[y]; 
+  save(); 
+  buildForms(); 
+  buildYearUI(); 
+  renderAll(); 
+}
+
+function addYear(){
+  const ys=yearList(); const last=ys[ys.length-1];
+  const suggest=String((parseInt(last,10)||parseInt(curYearBE(),10))+1);
+  const y=(prompt('เพิ่มรอบปีใหม่ (พ.ศ.) — คัดลอกข้อมูลจากปี '+last, suggest)||'').trim();
+  if(!y)return; if(DB.years[y]){ alert('มีข้อมูลปี '+y+' อยู่แล้ว'); switchYear(y); return; }
+  const clone=JSON.parse(JSON.stringify(DB.years[DB.meta.activeYear]));
+  clone.profile.planningYear=y;
+  const a=parseInt(clone.profile.age,10), dy=parseInt(y,10)-parseInt(last,10);
+  if(!isNaN(a)&&!isNaN(dy)) clone.profile.age=a+dy;
+  clone.updated=new Date().toISOString();
+  DB.years[y]=clone; DB.meta.activeYear=y; state=clone; save(); buildForms(); buildYearUI(); renderAll();
+}
+
+function deleteYear(){
+  if(yearList().length<=1){ alert('ต้องมีข้อมูลอย่างน้อย 1 รอบปี'); return; }
+  if(!confirm('ลบข้อมูลรอบปี '+DB.meta.activeYear+' ?'))return;
+  delete DB.years[DB.meta.activeYear]; DB.meta.activeYear=yearList()[0]; state=DB.years[DB.meta.activeYear];
+  save(); buildForms(); buildYearUI(); renderAll();
+}
+
+function resetData(){
+  DB = sampleDB();
+  state = DB.years[DB.meta.activeYear];
+  save();
+  buildForms();
+  buildYearUI();
+  renderAll();
+  goPage('dashboard');
+}
+
+function clearData(){
+  if(!confirm('ล้างข้อมูลรอบปี '+DB.meta.activeYear+' ทั้งหมด?'))return;
+  const s=blankYear(state.profile.planningYear||DB.meta.activeYear);
+  DB.years[DB.meta.activeYear]=s; state=s; save(); buildForms(); buildYearUI(); renderAll();
+}
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+/* =========================================================
+   PLANNER WORKSPACE CUSTOM FUNCTIONS
+   ========================================================= */
+
+
+
+
+
+
+
+
+
+
+
+const sum = o => Object.values(o).reduce((a,b)=>a+(+b||0),0);
+const n = v => +v||0;
+const fmt = v => Math.round(+v||0).toLocaleString('en-US');
+const fmtB = v => '฿'+fmt(v);
+const pct = v => (v*100).toFixed(2)+'%';
+function getByPath(o,p){ return p.split('.').reduce((a,k)=>a&&a[k],o); }
+function setByPath(o,p,v){ const ks=p.split('.'); const last=ks.pop(); let t=o; ks.forEach(k=>t=t[k]); t[last]=v; }
+function hasData(c){ return (c.incomeTotal+c.expenseTotal+c.assetsTotal+c.debtTotal)>0; }
+
+/* =========================================================
+   COMPUTE
+   ========================================================= */
+function compute(rec){
+  const s=rec||state;
+  ensureRec(s);
+  
+  const salaryAnnual = n(s.income.salaryMonthly) * 12 + n(s.income.bonusAmount);
+  const incomeTotal = salaryAnnual + n(s.income.interest) + n(s.income.dividend) + n(s.income.rental) + n(s.income.assetSale) + n(s.income.freelance) + n(s.income.business) + n(s.income.other);
+  const pfContribution = Math.round(n(s.income.salaryMonthly) * n(s.pf.contributionPct)/100 * 12);
+  const savingsOut = sum(s.expenses.savings);
+  const fixedManual = sum(s.expenses.fixed);
+  const fixed = fixedManual + pfContribution;
+  const variable = sum(s.expenses.variable);
+  const expenseTotal = savingsOut + fixed + variable;
+  
+  const netCashflow = incomeTotal - expenseTotal;
+  const liquid = sum(s.assets.liquid), invest = sum(s.assets.investment), personal = sum(s.assets.personal);
+  const assetsTotal = liquid+invest+personal;
+  const shortTerm = sum(s.debts.shortTerm), longTerm = sum(s.debts.longTerm);
+  const debtTotal = shortTerm+longTerm;
+  const debtPayments = sum(s.debts.payments);
+  const netWorth = assetsTotal - debtTotal;
+  const avgMonthlyExp = expenseTotal/12;
+  const liquidity   = avgMonthlyExp>0 ? liquid/avgMonthlyExp : 0;
+  const debtToAsset = assetsTotal>0 ? debtTotal/assetsTotal : 0;
+  const debtService = incomeTotal>0 ? debtPayments/incomeTotal : 0;
+  const savingRate  = incomeTotal>0 ? (savingsOut+netCashflow)/incomeTotal : 0;
+  const investRatio = netWorth>0 ? invest/netWorth : 0;
+  
+  const r1=scoreBand(liquidity,3,6), r2=scoreLowerBinary(debtToAsset,.50), r3=scoreLowerBinary(debtService,.45),
+        r4=scoreHigherBinary(savingRate,.10), r5=scoreHigherBinary(investRatio,.50);
+  const overall=Math.round((r1.score+r2.score+r3.score+r4.score+r5.score)/5);
+  
+  return {salaryAnnual,incomeTotal,pfContribution,savingsOut,fixedManual,fixed,variable,expenseTotal,netCashflow,
+    liquid,invest,personal,assetsTotal,shortTerm,longTerm,debtTotal,debtPayments,netWorth,
+    liquidity,debtToAsset,debtService,savingRate,investRatio,r1,r2,r3,r4,r5,overall,overallStatus:statusOf(overall)};
+}
+
+function scoreHigherBinary(v,g){ if(v>=g) return {score:Math.min(100,Math.round(80+(v-g)/(g||1)*20)),status:'ok'}; return {score:Math.max(0,Math.round((v/(g||1))*60)),status:'risk'}; }
+function scoreLowerBinary(v,g){ if(v<=g) return {score:Math.min(100,Math.round(80+(g-v)/(g||1)*20)),status:'ok'}; return {score:Math.max(0,Math.round(60-(v-g)/(g||1)*60)),status:'risk'}; }
+function scoreBand(v,lo,hi){
+  if(v>=lo&&v<=hi){ const mid=(lo+hi)/2, half=(hi-lo)/2||1; return {score:Math.round(85+(1-Math.abs(v-mid)/half)*15),status:'ok'}; }
+  if(v<lo) return {score:Math.max(0,Math.round((v/(lo||1))*60)),status:'risk'};
+  return {score:Math.max(40,Math.round(78-(v-hi)/(hi||1)*30)),status:'warn'};
+}
+function statusOf(s){ return s>=70?'ok':s>=40?'warn':'risk'; }
+const STC={ok:'#74AE84',warn:'#D7AE5E',risk:'#C76B62'};
+const STLABEL={ok:'แข็งแรง',warn:'ควรปรับปรุง',risk:'มีความเสี่ยง'};
+
+/* =========================================================
+   FORM SCHEMAS — [key, label, hint]
+   ========================================================= */
+const SCH = {
+  expenses:{
+    savings:{ title:'การออม / การลงทุน', tag:'ออม/ลงทุน', desc:'เงินออมและจัดสรรลงทุนรายปี (ไม่ใช่ยอดสินทรัพย์คงเหลือ)', items:[
+      ['savings','เงินออมทั่วไป','เงินที่ตั้งใจกันไว้เป็นเงินเก็บต่อปี (นอกเหนือจากเงินคงเหลือ)'],
+      ['fixedDepositSaving','เงินฝากประจำ / เงินออมประจำ','เงินที่ตั้งใจฝากหรือกันไว้เป็นเงินออมประจำต่อปี เช่น ฝากประจำหรือออมทรัพย์แบบสม่ำเสมอ'],
+      ['investment','เงินลงทุนทั่วไป','เงินที่นำไปลงทุนต่อปี เช่น ซื้อหุ้น/กองทุนทั่วไป (ไม่รวม RMF/SSF/Thai ESG)'],
+      ['rmf','RMF','ยอดซื้อกองทุน RMF ต่อปี'],
+      ['thaiesg','Thai ESG','ยอดซื้อกองทุน Thai ESG ต่อปี'],
+      ['other','เงินออมอื่นๆ','การออม/ลงทุนรูปแบบอื่นต่อปี']] },
+    fixed:{ title:'ค่าใช้จ่ายคงที่', tag:'Fixed', desc:'ค่าใช้จ่ายประจำที่จำนวนแน่นอน เลี่ยงได้ยาก', items:[
+      ['mortgage','ผ่อนบ้าน','ยอดผ่อนบ้านที่จ่ายจริงต่อปี'],
+      ['car','ผ่อนรถยนต์','ยอดผ่อนรถที่จ่ายจริงต่อปี'],
+      ['insurance','เบี้ยประกัน','เบี้ยประกันชีวิต/สุขภาพ รวมต่อปี'],
+      ['socialSecurity','ประกันสังคม','เงินสมทบประกันสังคมต่อปี'],
+      ['other','ค่าใช้จ่ายคงที่อื่นๆ','รายจ่ายประจำอื่นที่จำนวนเท่ากันทุกเดือน']] },
+    variable:{ title:'ค่าใช้จ่ายผันแปร', tag:'Variable', desc:'ค่าใช้จ่ายยืดหยุ่น ปรับเพิ่มลดตามไลฟ์สไตล์', items:[
+      ['food','ค่าอาหาร','ค่าอาหารทั้งครอบครัวต่อปี'],
+      ['utilities','ค่าสาธารณูปโภค','ค่าน้ำ ค่าไฟ ค่าส่วนกลาง ต่อปี'],
+      ['phone','ค่าโทรศัพท์','ค่าโทรศัพท์/อินเทอร์เน็ตต่อปี'],
+      ['transport','ค่าเดินทาง','ค่าน้ำมัน/เดินทางต่อปี'],
+      ['parents','ให้บิดามารดา','เงินที่ให้บิดามารดาต่อปี'],
+      ['travel','ค่าท่องเที่ยว/สันทนาการ','ค่าท่องเที่ยว ความบันเทิง ต่อปี'],
+      ['clothes','ค่าเสื้อผ้า/ใช้ส่วนตัว','เสื้อผ้าและของใช้ส่วนตัวต่อปี'],
+      ['tax','ภาษี','ภาษีเงินได้ที่จ่ายต่อปี'],
+      ['tuition','ค่าเทอม / ค่าเล่าเรียนต่อปี','ค่าเทอม ค่าเล่าเรียน หรือค่าใช้จ่ายด้านการศึกษาของบุตรหรือคนในความดูแลต่อปี เช่น โรงเรียน มหาวิทยาลัย หรือหลักสูตรพิเศษ'],
+      ['childrenOther','ค่าใช้จ่ายบุตรอื่น ๆ','ค่าใช้จ่ายอื่น ๆ ของบุตรรวมต่อปี (ไม่รวมค่าเทอม)'],
+      ['housekeeper','ค่าคนงานบ้าน','ค่าจ้างแม่บ้าน/คนสวน ต่อปี'],
+      ['other','ค่าใช้จ่ายอื่นๆ','ค่าใช้จ่ายผันแปรอื่นๆ ต่อปี']] }
+  },
+  assets:{
+    liquid:{ title:'สินทรัพย์สภาพคล่อง', tag:'Liquid', desc:'สินทรัพย์ที่เปลี่ยนเป็นเงินสดได้เร็ว ใช้ประเมินเงินสำรองฉุกเฉิน', items:[
+      ['cash','เงินสด','เงินสดในมือ/กระเป๋า'],
+      ['savingsAccount','เงินฝากออมทรัพย์','ยอดเงินฝากออมทรัพย์ปัจจุบัน'],
+      ['fixedDeposit','เงินฝากประจำ','ยอดเงินฝากประจำปัจจุบัน'],
+      ['coop','เงินฝากสหกรณ์','เงินฝาก/หุ้นสหกรณ์ที่ถอนได้'],
+      ['other','อื่นๆ','สินทรัพย์สภาพคล่องอื่นๆ']] },
+    investment:{ title:'สินทรัพย์เพื่อการลงทุน', tag:'Investment', desc:'สินทรัพย์ที่มีเป้าหมายเพื่อสร้างผลตอบแทนหรือเพิ่มความมั่งคั่ง', items:[
+      ['bond','หุ้นกู้ / พันธบัตร','มูลค่าหุ้นกู้/พันธบัตรปัจจุบัน'],
+      ['fund','กองทุนรวม','มูลค่ากองทุนรวมปัจจุบัน (ไม่รวม RMF/SSF/Thai ESG)'],
+      ['stock','หุ้น','มูลค่าหุ้นที่ถืออยู่ปัจจุบัน'],
+      ['gold','ทองคำเพื่อการลงทุน','มูลค่าทองคำเพื่อการลงทุน'],
+      ['crypto','คริปโต','มูลค่าสินทรัพย์ดิจิทัล/คริปโตปัจจุบัน'],
+      ['realEstate','อสังหาริมทรัพย์เพื่อการลงทุน','อสังหาฯ เพื่อลงทุน/ปล่อยเช่า (ไม่ใช่บ้านที่อยู่อาศัย)'],
+      ['pvd','PVD / กองทุนสำรองเลี้ยงชีพ','มูลค่ากองทุนสำรองเลี้ยงชีพสะสมปัจจุบัน'],
+      ['rmfssf','RMF / SSF','มูลค่ากองทุน RMF + SSF ที่ถืออยู่'],
+      ['thaiesg','Thai ESG','มูลค่ากองทุน Thai ESG'],
+      ['gsbLottery','สลากออมสิน','มูลค่าสลากออมสินหรือผลิตภัณฑ์ออมทรัพย์ลักษณะคล้ายกันที่ถืออยู่ในปัจจุบัน'],
+      ['insuranceCash','มูลค่าเงินสดกรมธรรม์','มูลค่าเวนคืนกรมธรรม์ประกันชีวิต'],
+      ['other','อื่นๆ','สินทรัพย์เพื่อการลงทุนอื่นๆ']] },
+    personal:{ title:'สินทรัพย์ใช้ส่วนตัว', tag:'Personal', desc:'สินทรัพย์ที่ถือไว้เพื่อใช้งาน ไม่ใช่เพื่อสร้างกระแสเงินสดหรือผลตอบแทนโดยตรง', items:[
+      ['home','บ้านที่อยู่อาศัย','มูลค่าบ้านที่อยู่อาศัยปัจจุบัน'],
+      ['car','รถยนต์','มูลค่ารถยนต์ปัจจุบัน'],
+      ['jewelry','เครื่องประดับ / ทองรูปพรรณ','เครื่องประดับหรือทองรูปพรรณที่ใช้ส่วนตัว ไม่ใช่เพื่อลงทุน'],
+      ['luxuryItems','แบรนด์เนม / ของใช้ส่วนตัวมูลค่าสูง','กระเป๋าแบรนด์เนม นาฬิกา สินค้าหรู หรือของใช้ส่วนตัวที่มีมูลค่าและสามารถประเมินราคาได้'],
+      ['collectibles','ของสะสม','ของสะสมเพื่อใช้ส่วนตัว'],
+      ['other','อื่นๆ','สินทรัพย์ใช้ส่วนตัวอื่นๆ']] }
+  },
+  debts:{
+    shortTerm:{ title:'หนี้สินระยะสั้น', tag:'< 1 ปี', desc:'หนี้สินที่ครบกำหนดชำระคืนใน 1 ปี', items:[
+      ['utility','ค่าสาธารณูปโภคค้างจ่าย','บิลค้างจ่ายที่ยังไม่ได้ชำระ'],
+      ['creditCard','หนี้สินบัตรเครดิต','กรอกเฉพาะยอดค้างชำระหรือยอดที่ผ่อนชำระอยู่ หากใช้บัตรเครดิตแล้วจ่ายเต็มทุกงวด ไม่จำเป็นต้องกรอกเป็นหนี้สิน'],
+      ['shortLoan','เงินกู้ระยะสั้นอื่นๆ','เงินกู้ที่ครบกำหนดภายใน 1 ปี'],
+      ['other','อื่นๆ','หนี้ระยะสั้นอื่นๆ']] },
+    longTerm:{ title:'หนี้สินระยะยาว', tag:'> 1 ปี', desc:'หนี้สินระยะยาวระยะเวลาผ่อนจ่ายเกิน 1 ปี', items:[
+      ['autoLoan','ยอดคงค้างผ่อนรถยนต์','เงินต้นคงเหลือของสินเชื่อรถ'],
+      ['mortgage','ยอดคงค้างผ่อนบ้าน','เงินต้นคงเหลือของสินเชื่อบ้าน'],
+      ['installment','ยอดคงค้างผ่อนสินทรัพย์','ยอดผ่อนสินทรัพย์อื่นที่คงเหลือ'],
+      ['other','อื่นๆ','หนี้ระยะยาวอื่นๆ']] },
+    payments:{ title:'ภาระชำระหนี้ต่อปี (สำหรับ Debt Service Ratio)', tag:'จ่าย/ปี', desc:'ส่วนนี้ใช้วัดว่ารายได้ของคุณถูกใช้ไปกับการผ่อนหนี้มากแค่ไหน ไม่ใช่ยอดหนี้คงเหลือ<br>• ยอดหนี้คงเหลือใช้สำหรับคำนวณสัดส่วนหนี้ต่อสินทรัพย์ ส่วนภาระผ่อนต่อปีใช้สำหรับคำนวณภาระผ่อนหนี้ต่อรายได้', items:[
+      ['mortgagePayment','ผ่อนบ้าน/ปี','ยอดผ่อนบ้านรวมทั้งปี (ใช้คำนวณภาระหนี้ต่อรายได้)'],
+      ['carPayment','ผ่อนรถยนต์/ปี','ยอดผ่อนรถรวมทั้งปี'],
+      ['otherPayment','ชำระหนี้อื่นๆ/ปี','ยอดผ่อนหนี้อื่นรวมทั้งปี']] }
+  }
+};
+
+function rootTotalLabel(r){return r==='expenses'?'กระแสเงินสดจ่ายรวม':r==='assets'?'สินทรัพย์รวม':'หนี้สินรวม';}
+
+/* ---- builders ---- */
+function tip(h){ return h?`<span class="tip"><span class="i">i</span><span class="bub">${h}</span></span>`:''; }
+
+function moneyField(path,label,hint){
+  const v=getByPath(state,path)||0;
+  return `<div class="field money"><label>${label}${tip(hint)}</label>
+    <input type="text" inputmode="numeric" data-path="${path}" data-num="1" data-money="1" value="${v?fmt(v):''}" placeholder="0"></div>`;
+}
+
+function buildGroupedForm(containerId, root){
+  const groups=SCH[root]; 
+  let h='';
+  for(const gk in groups){
+    const g=groups[gk]; 
+    let fields='';
+    g.items.forEach(([key,label,hint])=>fields+=moneyField(`${root}.${gk}.${key}`,label,hint));
+    let extra='';
+    if(root==='expenses'&&gk==='fixed'){
+      extra=`<div class="calc-row" style="grid-column:1/-1;margin-top:4px">
+        <span style="font-size:12.5px;color:var(--cream)">กองทุนสำรองเลี้ยงชีพ ${tip('คำนวณจากเงินเดือน × % สะสม × 12 — รวมในค่าใช้จ่ายคงที่อัตโนมัติ')}</span>
+        <div class="mini"><label>% สะสม</label><input type="text" inputmode="decimal" data-path="pf.contributionPct" data-num="1" value="${state.pf.contributionPct||''}"></div>
+        <div class="mini"><label>% ผลตอบแทน</label><input type="text" inputmode="decimal" data-path="pf.returnPct" data-num="1" value="${state.pf.returnPct||''}"></div>
+        <span class="res" id="pf-res">฿0</span></div>`;
+    }
+    h+=`<div class="fgroup">
+      <div class="fgroup-h">${g.title}<span class="tag">${g.tag}</span></div>
+      ${g.desc ? `<div style="font-size:11.5px; color:var(--muted); margin-bottom:12px; margin-top:-10px;">${g.desc}</div>` : ''}
+      <div class="field-grid">${fields}${extra}</div>
+      <div class="subtotal"><span>รวม ${g.title}</span><b id="sub-${root}-${gk}">฿0</b></div>
+    </div>`;
+  }
+  h+=`<div class="subtotal grand"><span>รวมทั้งหมด · ${rootTotalLabel(root)}</span><b id="sub-${root}-TOTAL">฿0</b></div>`;
+  document.getElementById(containerId).innerHTML=h;
+}
+
+function buildIncomeForm(){
+  const fld=(path,label,hint,taxTag)=>{
+    const v=getByPath(state,path); 
+    return `
+      <div class="field money">
+        <label style="display:flex; justify-content:space-between; width:100%">
+          <span>${label}${tip(hint)}</span>
+          ${taxTag ? `<span class="tax-tag">${taxTag}</span>` : ''}
+        </label>
+        <input type="text" inputmode="numeric" data-path="${path}" data-num="1" data-money="1" value="${v?fmt(v):''}" placeholder="0">
+      </div>`;
+  };
+  
+  const otherVal = getByPath(state, 'income.other') || 0;
+  const otherCat = getByPath(state, 'income.otherCategory') || '40(8)';
+  
+  const otherFieldHTML = `
+    <div class="field money">
+      <label style="display:flex; justify-content:space-between; width:100%">
+        <span>รายได้อื่น ๆ${tip('รายได้อื่น ๆ ที่ยังไม่ได้ระบุด้านบน')}</span>
+        <span class="tax-tag" style="background:transparent; padding:0; width:auto; border-radius:0;">
+          ประเภท: 
+          <select data-path="income.otherCategory" style="display:inline-block; width:auto; background:var(--navy-3); color:var(--gold); border:1px solid var(--line-soft); padding:1px 4px; border-radius:4px; font-size:10px; cursor:pointer;">
+            <option value="40(1)" ${otherCat==='40(1)'?'selected':''}>40(1)</option>
+            <option value="40(2)" ${otherCat==='40(2)'?'selected':''}>40(2)</option>
+            <option value="40(3)" ${otherCat==='40(3)'?'selected':''}>40(3)</option>
+            <option value="40(4)" ${otherCat==='40(4)'?'selected':''}>40(4)</option>
+            <option value="40(5)" ${otherCat==='40(5)'?'selected':''}>40(5)</option>
+            <option value="40(6)" ${otherCat==='40(6)'?'selected':''}>40(6)</option>
+            <option value="40(7)" ${otherCat==='40(7)'?'selected':''}>40(7)</option>
+            <option value="40(8)" ${otherCat==='40(8)'?'selected':''}>40(8)</option>
+          </select>
+        </span>
+      </label>
+      <input type="text" inputmode="numeric" data-path="income.other" data-num="1" data-money="1" value="${otherVal?fmt(otherVal):''}" placeholder="0">
+    </div>`;
+
+  document.getElementById('form-income').innerHTML=`
+    <div class="fgroup"><div class="fgroup-h">เงินเดือน &amp; โบนัส<span class="tag">Salary &amp; Bonus</span></div>
+      <div class="field-grid">
+        ${fld('income.salaryMonthly','เงินเดือนต่อเดือน — หมวดภาษีเบื้องต้น: 40(1)','เงินเดือนประจำต่อเดือน ก่อนหักภาษี','เงินได้ 40(1)')}
+        ${fld('income.bonusAmount','โบนัสต่อปี — หมวดภาษีเบื้องต้น: 40(1)','ยอดโบนัสที่ได้รับต่อปี','เงินได้ 40(1)')}
+      </div>
+      <div class="calc-row">
+        <span style="font-size:12.5px;color:var(--cream)">สูตรคำนวณ: รายได้จากเงินเดือนต่อปี = เงินเดือนต่อเดือน × 12 + โบนัสต่อปี</span>
+        <span class="res" id="salary-res">฿0</span>
+      </div>
+    </div>
+    <div class="fgroup"><div class="fgroup-h">รายได้อื่น ๆ จากแหล่งต่าง ๆ<span class="tag">Other Income Sources</span></div>
+      <div class="field-grid">
+        ${fld('income.freelance','รายได้ฟรีแลนซ์ / ค่าบริการ','รายได้จากงานฟรีแลนซ์ รับจ้าง หรือบริการต่อปี','เงินได้ 40(2)')}
+        ${fld('income.interest','ดอกเบี้ยรับ','ดอกเบี้ยเงินฝาก/พันธบัตรสะสมต่อปี','เงินได้ 40(4)')}
+        ${fld('income.dividend','เงินปันผลรับ','เงินปันผลจากหุ้น/กองทุนรวมต่อปี','เงินได้ 40(4)')}
+        ${fld('income.rental','รายได้จากค่าเช่า','รายได้จากการปล่อยเช่าสินทรัพย์/อสังหาริมทรัพย์ต่อปี','เงินได้ 40(5)')}
+        ${fld('income.assetSale','รายได้จากขายสินทรัพย์','รายได้จากการขายสินทรัพย์ประเภทต่าง ๆ ต่อปี','เงินได้ 40(8)')}
+        ${fld('income.business','รายได้ธุรกิจ','รายได้จากธุรกิจการค้า กิจการส่วนตัวต่อปี','เงินได้ 40(8)')}
+        ${otherFieldHTML}
+      </div>
+    </div>
+    <div class="note" style="margin-top: 15px; border-left-color: var(--gold-soft);">
+      <b>ข้อมูลภาษีเบื้องต้นสำหรับการวางแผน:</b> ข้อมูลประเภทเงินได้ใช้เพื่อการจัดหมวดหมู่เบื้องต้นสำหรับการวางแผนภาษี ไม่ใช่ระบบคำนวณหรือยื่นภาษี กรุณาตรวจสอบกับผู้เชี่ยวชาญด้านภาษีอีกครั้ง
+    </div>
+    <div class="subtotal grand"><span>กระแสเงินสดรับรวมต่อปี</span><b id="income-total">฿0</b></div>`;
+}
+
+function buildProfileForm(){
+  ensureRec(state); const p=state.profile;
+  const f=(path,label,type='text')=>{const v=getByPath(state,path)??''; return `<div class="field"><label>${label}</label><input type="${type}" data-path="${path}" value="${v}"></div>`;};
+  const sa=ageFromBD(p.spouseBirthdate);
+  let kids='';
+  (p.childrenList||[]).forEach((c,i)=>{ const ca=ageFromBD(c.birthdate);
+    kids+=`<div class="child-row">
+      <div class="field"><label>ชื่อบุตรคนที่ ${i+1}</label><input type="text" data-path="profile.childrenList.${i}.name" value="${c.name||''}" placeholder="ชื่อบุตร"></div>
+      <div class="field"><label>วันเกิด <span class="age-hint" id="child-age-${i}">${ca!=null?'· อายุ '+ca+' ปี':''}</span></label><input type="date" value="${c.birthdate||''}" onchange="childDate(${i},this)"></div>
+      <button class="rm" title="ลบบุตรคนนี้" onclick="removeChild(${i})">✕</button>
+    </div>`; });
+  document.getElementById('form-profile').innerHTML=`
+    <div class="fgroup"><div class="fgroup-h">ผู้วางแผน<span class="tag">Client</span></div>
+      <div class="field-grid">
+        ${f('profile.name','ชื่อ')}
+        <div class="field"><label>วันเกิด</label><input type="date" value="${p.birthdate||''}" onchange="selfBirth(this)"></div>
+        <div class="field"><label>อายุ <span class="age-hint">(คำนวณจากวันเกิด)</span></label><input type="number" id="age-self" data-path="profile.age" value="${p.age??''}"></div>
+        ${f('profile.occupation','อาชีพ')}${f('profile.workplace','ที่ทำงาน')}${f('profile.status','สถานภาพ')}
+        ${f('profile.planningYear','สำหรับรอบปี (พ.ศ.)')}
+      </div></div>
+    <div class="fgroup"><div class="fgroup-h">คู่สมรส<span class="tag">Spouse</span></div>
+      <div class="field-grid">
+        ${f('profile.spouseName','ชื่อคู่สมรส')}
+        <div class="field"><label>วันเกิด <span class="age-hint" id="spouse-age-hint">${sa!=null?'· อายุ '+sa+' ปี':''}</span></label><input type="date" value="${p.spouseBirthdate||''}" onchange="spouseBirth(this)"></div>
+        ${f('profile.spouseOccupation','อาชีพ')}${f('profile.spouseWorkplace','ที่ทำงาน')}
+      </div></div>
+    <div class="fgroup"><div class="fgroup-h">บุตร<span class="tag">Children</span></div>
+      ${kids||'<div style="font-size:12.5px;color:var(--muted);margin-bottom:14px">ยังไม่มีข้อมูลบุตร — กดปุ่มด้านล่างเพื่อเพิ่ม</div>'}
+      <button class="btn sm" onclick="addChild()">＋ เพิ่มบุตร</button>
+    </div>
+    <div class="fgroup"><div class="fgroup-h">บิดา &amp; มารดา<span class="tag">Parents</span></div>
+      <div class="field-grid">${f('profile.fatherName','ชื่อบิดา')}${f('profile.fatherAge','อายุ','number')}${f('profile.fatherHealth','สุขภาพ')}${f('profile.motherName','ชื่อมารดา')}${f('profile.motherAge','อายุ','number')}${f('profile.motherHealth','สุขภาพ')}</div></div>`;
+}
+
+function selfBirth(el){ state.profile.birthdate=el.value; const a=ageFromBD(el.value); if(a!=null){ state.profile.age=a; const ai=document.getElementById('age-self'); if(ai)ai.value=a; } save(); renderAll(false); }
+function spouseBirth(el){ state.profile.spouseBirthdate=el.value; const a=ageFromBD(el.value); const h=document.getElementById('spouse-age-hint'); if(h)h.textContent=a!=null?('· อายุ '+a+' ปี'):''; save(); }
+function childDate(i,el){ ensureRec(state); if(state.profile.childrenList[i]){ state.profile.childrenList[i].birthdate=el.value; const a=ageFromBD(el.value); const h=document.getElementById('child-age-'+i); if(h)h.textContent=a!=null?('· อายุ '+a+' ปี'):''; save(); } }
+function addChild(){ ensureRec(state); state.profile.childrenList.push({name:'',birthdate:''}); save(); buildForms(); goPage('profile'); }
+function removeChild(i){ ensureRec(state); state.profile.childrenList.splice(i,1); save(); buildForms(); goPage('profile'); }
+
+function buildGoalsForm(){
+  let h='';
+  state.goals.forEach((g,i)=>{
+    h+=`<div class="fgroup" style="margin-bottom:16px"><div class="fgroup-h">เป้าหมายสำคัญอันดับ ${i+1}</div>
+      <div class="field-grid" style="grid-template-columns:2fr 1fr 1fr 2fr">
+        <div class="field"><label>ชื่อเป้าหมาย</label><input type="text" data-path="goals.${i}.name" value="${g.name||''}" placeholder="เช่น เกษียณ อายุ 60"></div>
+        <div class="field money"><label>เป้าหมาย (บาท)</label><input type="text" inputmode="numeric" data-path="goals.${i}.target" data-num="1" data-money="1" value="${g.target?fmt(g.target):''}" placeholder="0"></div>
+        <div class="field"><label>ปีเป้าหมาย</label><input type="text" data-path="goals.${i}.year" value="${g.year||''}"></div>
+        <div class="field"><label>หมายเหตุ</label><input type="text" data-path="goals.${i}.notes" value="${g.notes||''}"></div>
+      </div></div>`;
+  });
+  document.getElementById('form-goals').innerHTML=h;
+}
+
+function buildForms(){
+  ensureRec(state);
+  buildProfileForm(); buildGoalsForm(); buildIncomeForm();
+  buildGroupedForm('form-expenses','expenses'); buildGroupedForm('form-assets','assets'); buildGroupedForm('form-debts','debts');
+  bindInputs(); refreshSubtotals();
+}
+
+function bindInputs(){
+  document.querySelectorAll('[data-path]').forEach(el=>{
+    const updateVal = () => {
+      if(el.dataset.num==='1'){ const c=el.value.replace(/[^0-9.]/g,''); setByPath(state,el.dataset.path,c===''?0:parseFloat(c)); }
+      else setByPath(state,el.dataset.path,el.value);
+      save(); refreshSubtotals(); renderAll(false);
+    };
+    
+    el.addEventListener('input', updateVal);
+    el.addEventListener('change', updateVal);
+    
+    if(el.dataset.money==='1'){
+      el.addEventListener('blur',()=>{ const v=getByPath(state,el.dataset.path); el.value=v?fmt(v):'' ; });
+      el.addEventListener('focus',()=>{ const v=getByPath(state,el.dataset.path); el.value=v?String(v):''; });
+    }
+  });
+}
+
+function refreshSubtotals(){
+  const c=compute();
+  ['expenses','assets','debts'].forEach(root=>{ for(const gk in SCH[root]){
+    const e=document.getElementById(`sub-${root}-${gk}`);
+    if(e){ let v=sum(state[root][gk]); if(root==='expenses'&&gk==='fixed') v+=c.pfContribution; e.textContent=fmtB(v); }
+  }});
+  const setT=(id,v)=>{const e=document.getElementById(id); if(e)e.textContent=fmtB(v);};
+  setT('sub-expenses-TOTAL',c.expenseTotal); setT('sub-assets-TOTAL',c.assetsTotal); setT('sub-debts-TOTAL',c.debtTotal);
+  setT('income-total',c.incomeTotal); setT('salary-res',c.salaryAnnual); setT('pf-res',c.pfContribution);
+}
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+let charts={};
+function renderAll(withCharts=true){
+  const c=compute();
+  const tu=document.getElementById('tb-updated'); if(tu) tu.textContent=new Date(state.updated).toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'numeric'});
+  
+  const filled=hasData(c);
+  const de=document.getElementById('dash-empty'); if(de) de.style.display=filled?'none':'block';
+  const db=document.getElementById('dash-body'); if(db) db.style.display=filled?'block':'none';
+  
+  if(filled){
+    renderScoreCompact('dash-score-compact', c);
+    
+    const head = c.overallStatus==='ok'?'สุขภาพการเงินของคุณอยู่ในเกณฑ์แข็งแรง':c.overallStatus==='warn'?'สุขภาพการเงินของคุณยังมีจุดที่ควรปรับปรุง':'สุขภาพการเงินของคุณมีความเสี่ยงที่ควรรีบดูแล';
+    const sub = c.overallStatus==='ok'?'รากฐานการเงินมั่นคง ขั้นต่อไปคือการวางแผนตามเป้าหมายและสร้างความมั่งคั่งระยะยาว':
+               c.overallStatus==='warn'?'มีบางอัตราส่วนที่ยังไม่ถึงเกณฑ์ ดูรายละเอียดและคำแนะนำด้านล่างเพื่อปรับปรุงทีละขั้น':
+               'ควรให้ความสำคัญกับด้านที่มีความเสี่ยงก่อน เช่น เงินสำรองหรือภาระหนี้ ตามคำแนะนำด้านล่าง';
+    
+    document.getElementById('dash-health-title').textContent = head;
+    document.getElementById('dash-health-desc').textContent = sub;
+    
+    document.getElementById('snap-income').textContent = fmtB(c.incomeTotal);
+    document.getElementById('snap-expenses').textContent = fmtB(c.expenseTotal);
+    
+    let netEl = document.getElementById('snap-netflow');
+    netEl.textContent = fmtB(c.netCashflow);
+    netEl.className = 'snapshot-val ' + (c.netCashflow >= 0 ? 'pos' : 'neg');
+    netEl.style.color = c.netCashflow >= 0 ? 'var(--ok)' : 'var(--risk)';
+    
+    // Multi-segment horizontal cashflow bar rendering
+    const totalOutflow = c.savingsOut + c.fixed + c.variable;
+    let savingsPct = 0, fixedPct = 0, variablePct = 0, netPct = 0;
+    
+    if (c.incomeTotal > 0) {
+      const pctVal = v => ((v / c.incomeTotal) * 100).toFixed(0);
+      document.getElementById('cashflow-pct-savings').textContent = `${pctVal(c.savingsOut)}%`;
+      document.getElementById('cashflow-pct-fixed').textContent = `${pctVal(c.fixed)}%`;
+      document.getElementById('cashflow-pct-variable').textContent = `${pctVal(c.variable)}%`;
+      
+      if (c.netCashflow >= 0) {
+        savingsPct = (c.savingsOut / c.incomeTotal) * 100;
+        fixedPct = (c.fixed / c.incomeTotal) * 100;
+        variablePct = (c.variable / c.incomeTotal) * 100;
+        netPct = (c.netCashflow / c.incomeTotal) * 100;
+        
+        document.getElementById('cashflow-bar-savings').style.width = `${savingsPct}%`;
+        document.getElementById('cashflow-bar-fixed').style.width = `${fixedPct}%`;
+        document.getElementById('cashflow-bar-variable').style.width = `${variablePct}%`;
+        document.getElementById('cashflow-bar-net').style.width = `${netPct}%`;
+        
+        document.getElementById('cashflow-bar-net').style.backgroundColor = 'var(--ok)';
+        document.getElementById('legend-dot-net').style.backgroundColor = 'var(--ok)';
+        document.getElementById('legend-lbl-net').textContent = 'คงเหลือสุทธิ:';
+        document.getElementById('cashflow-pct-net').textContent = `${netPct.toFixed(0)}%`;
+        document.getElementById('cashflow-pct-net').style.color = 'var(--ok)';
+      } else {
+        savingsPct = totalOutflow > 0 ? (c.savingsOut / totalOutflow) * 100 : 0;
+        fixedPct = totalOutflow > 0 ? (c.fixed / totalOutflow) * 100 : 0;
+        variablePct = totalOutflow > 0 ? (c.variable / totalOutflow) * 100 : 0;
+        
+        document.getElementById('cashflow-bar-savings').style.width = `${savingsPct}%`;
+        document.getElementById('cashflow-bar-fixed').style.width = `${fixedPct}%`;
+        document.getElementById('cashflow-bar-variable').style.width = `${variablePct}%`;
+        document.getElementById('cashflow-bar-net').style.width = `0%`;
+        
+        const deficitPct = (Math.abs(c.netCashflow) / c.incomeTotal) * 100;
+        document.getElementById('legend-dot-net').style.backgroundColor = 'var(--risk)';
+        document.getElementById('legend-lbl-net').textContent = 'ใช้เกินรายได้ (ติดลบ):';
+        document.getElementById('cashflow-pct-net').textContent = `-${deficitPct.toFixed(0)}%`;
+        document.getElementById('cashflow-pct-net').style.color = 'var(--risk)';
+      }
+    } else {
+      if (totalOutflow > 0) {
+        savingsPct = (c.savingsOut / totalOutflow) * 100;
+        fixedPct = (c.fixed / totalOutflow) * 100;
+        variablePct = (c.variable / totalOutflow) * 100;
+        
+        document.getElementById('cashflow-bar-savings').style.width = `${savingsPct}%`;
+        document.getElementById('cashflow-bar-fixed').style.width = `${fixedPct}%`;
+        document.getElementById('cashflow-bar-variable').style.width = `${variablePct}%`;
+      } else {
+        document.getElementById('cashflow-bar-savings').style.width = `0%`;
+        document.getElementById('cashflow-bar-fixed').style.width = `0%`;
+        document.getElementById('cashflow-bar-variable').style.width = `0%`;
+      }
+      document.getElementById('cashflow-bar-net').style.width = `0%`;
+      
+      document.getElementById('cashflow-pct-savings').textContent = '0%';
+      document.getElementById('cashflow-pct-fixed').textContent = '0%';
+      document.getElementById('cashflow-pct-variable').textContent = '0%';
+      
+      document.getElementById('legend-dot-net').style.backgroundColor = 'var(--risk)';
+      document.getElementById('legend-lbl-net').textContent = 'ใช้เกินรายได้ (ติดลบ):';
+      document.getElementById('cashflow-pct-net').textContent = '100%';
+      document.getElementById('cashflow-pct-net').style.color = 'var(--risk)';
+    }
+    
+    document.getElementById('snap-assets').textContent = fmtB(c.assetsTotal);
+    document.getElementById('snap-debts').textContent = fmtB(c.debtTotal);
+    
+    let nwEl = document.getElementById('snap-networth');
+    nwEl.textContent = fmtB(c.netWorth);
+    nwEl.style.color = c.netWorth >= 0 ? 'var(--gold)' : 'var(--risk)';
+    
+    renderDebtStats(c);
+    renderReco(c); 
+    renderGoals(c); 
+    renderAssetLegend(c);
+  }
+  
+  renderScore('score-card-2',c); 
+  renderRatioDetail(c);
+  document.getElementById('reco-full').innerHTML=buildRecoHTML(c);
+  
+  if(withCharts){ 
+    if(filled) renderCharts(c); 
+    renderCompare(); 
+  }
+}
+
+function renderScoreCompact(id, c) {
+  const el = document.getElementById(id); if(!el) return;
+  const col = STC[c.overallStatus], p = c.overall/100, R = 40, CX = 50, CY = 50, sw = 10, len = Math.PI * R;
+  const arc = `M ${CX-R} ${CY} A ${R} ${R} 0 0 1 ${CX+R} ${CY}`;
+  el.innerHTML = `
+    <div class="gauge-compact" style="position:relative; width:100px; height:60px;">
+      <svg viewBox="0 0 100 60" width="100" height="60">
+        <path d="${arc}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="${sw}" stroke-linecap="round"/>
+        <path d="${arc}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${len}" stroke-dashoffset="${len*(1-p)}" style="transition:stroke-dashoffset .8s ease"/>
+      </svg>
+      <div style="position:absolute; left:0; right:0; bottom:4px; text-align:center;">
+        <span style="font-family:'Inter'; font-size:22px; font-weight:800; color:${col}; line-height:1;">${c.overall}</span>
+      </div>
+    </div>
+    <div class="status-pill st-${c.overallStatus}" style="padding: 3px 10px; font-size: 11px; margin-top: 4px; display: inline-flex;"><span class="dot" style="background:${col}; width: 6px; height: 6px;"></span>${STLABEL[c.overallStatus]}</div>
+  `;
+}
+
+function renderScore(id,c){
+  const el=document.getElementById(id); if(!el)return;
+  const col=STC[c.overallStatus], p=c.overall/100, R=110,CX=130,CY=130,sw=20,len=Math.PI*R;
+  const arc=`M ${CX-R} ${CY} A ${R} ${R} 0 0 1 ${CX+R} ${CY}`;
+  el.innerHTML=`<div class="gauge"><svg viewBox="0 0 260 140" width="260" height="140">
+      <path d="${arc}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="${sw}" stroke-linecap="round"/>
+      <path d="${arc}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${len}" stroke-dashoffset="${len*(1-p)}" style="transition:stroke-dashoffset .8s ease"/>
+    </svg><div class="num"><div class="s" style="color:${col}">${c.overall}</div><div class="o">จาก 100 คะแนน</div></div></div>
+    <div class="status-pill st-${c.overallStatus}"><span class="dot" style="background:${col}"></span>${STLABEL[c.overallStatus]}</div>`;
+}
+
+function renderDebtStats(c){
+  const col=STC[c.r2.status];
+  document.getElementById('debt-snap-stat-1').innerHTML=`
+    <div style="color: var(--muted); font-size: 11px;">สัดส่วนหนี้สินต่อสินทรัพย์</div>
+    <div style="font-family:Inter; font-size:20px; font-weight:700; color:${col}; margin: 2px 0;">${pct(c.debtToAsset)}</div>
+    <div style="font-size:10.5px; color: var(--muted)">เป้าหมาย &lt; 50% (${STLABEL[c.r2.status]})</div>`;
+    
+  const col3=STC[c.r3.status];
+  document.getElementById('debt-snap-stat-2').innerHTML=`
+    <div style="color: var(--muted); font-size: 11px;">ภาระผ่อนชำระหนี้ต่อปี</div>
+    <div style="font-family:Inter; font-size:16px; font-weight:700; color:var(--white); margin: 2px 0;">${fmtB(c.debtPayments)}/ปี</div>
+    <div style="font-size:10.5px; color:var(--muted)">คิดเป็น <b style="color:${col3}">${pct(c.debtService)}</b> ของรายได้ (เป้าหมาย &lt; 45%)</div>`;
+}
+
+const RATIO_DEFS=[
+  {
+    key:'r1',
+    name:'1. เงินสำรองฉุกเฉิน',
+    unit:'เดือน',
+    desc:'บอกว่าเงินสดหรือเงินที่ถอนได้เร็วของคุณ สามารถใช้จ่ายได้กี่เดือน หากวันนี้รายได้หยุดลง',
+    formula:'สินทรัพย์สภาพคล่อง ÷ ค่าใช้จ่ายเฉลี่ยต่อเดือน',
+    target:'3–6 เดือน',
+    disp:c=>c.liquidity.toFixed(2),
+    exp:c=>`สินทรัพย์สภาพคล่องครอบคลุมค่าใช้จ่ายได้ ${c.liquidity.toFixed(1)} เดือน`,
+    prog:c=>Math.min(1,c.liquidity/9)
+  },
+  {
+    key:'r2',
+    name:'2. สัดส่วนหนี้',
+    unit:'%',
+    desc:'บอกว่าสินทรัพย์ทั้งหมดของคุณ มีหนี้ปนอยู่มากแค่ไหน ยิ่งต่ำยิ่งปลอดภัย',
+    formula:'หนี้สินรวม ÷ สินทรัพย์รวม',
+    target:'น้อยกว่า 50%',
+    disp:c=>pct(c.debtToAsset),
+    exp:c=>`มีภาระหนี้คิดเป็น ${pct(c.debtToAsset)} ของสินทรัพย์รวม`,
+    prog:c=>Math.min(1,c.debtToAsset/.8)
+  },
+  {
+    key:'r3',
+    name:'3. ภาระผ่อนหนี้',
+    unit:'%',
+    desc:'บอกว่ารายได้ต่อปีของคุณถูกใช้ไปกับการผ่อนหนี้มากแค่ไหน ถ้าสูงเกินไปจะทำให้การเงินตึง',
+    formula:'ภาระชำระหนี้ต่อปี ÷ รายได้รวมต่อปี',
+    target:'น้อยกว่า 45%',
+    disp:c=>pct(c.debtService),
+    exp:c=>`ใช้รายได้ ${pct(c.debtService)} ไปกับการชำระหนี้รายงวด`,
+    prog:c=>Math.min(1,c.debtService/.7)
+  },
+  {
+    key:'r4',
+    name:'4. อัตราการออม',
+    unit:'%',
+    desc:'บอกว่าคุณกันเงินจากรายได้ไปออมหรือลงทุนได้มากแค่ไหน เป็นตัวชี้วัดวินัยทางการเงิน',
+    formula:'(เงินออมและลงทุน + กระแสเงินสดสุทธิ) ÷ รายได้รวมต่อปี',
+    target:'มากกว่า 10%',
+    disp:c=>pct(c.savingRate),
+    exp:c=>`ออมและลงทุนได้ ${pct(c.savingRate)} ของรายได้รวม`,
+    prog:c=>Math.min(1,Math.max(0,c.savingRate))
+  },
+  {
+    key:'r5',
+    name:'5. การลงทุนสู่เป้าหมาย',
+    unit:'%',
+    desc:'บอกว่าความมั่งคั่งของคุณถูกนำไปอยู่ในสินทรัพย์ที่มีโอกาสเติบโตมากแค่ไหน',
+    formula:'สินทรัพย์เพื่อการลงทุน ÷ ความมั่งคั่งสุทธิ',
+    target:'มากกว่า 50%',
+    disp:c=>pct(c.investRatio),
+    exp:c=>`สินทรัพย์ลงทุนคิดเป็น ${pct(c.investRatio)} ของความมั่งคั่งสุทธิ`,
+    prog:c=>Math.min(1,Math.max(0,c.investRatio))
+  }
+];
+
+function renderRatioDetail(c){
+  const RECO=recoMap(c); 
+  let h='<div class="grid" style="grid-template-columns:1fr 1fr;gap:16px">';
+  RATIO_DEFS.forEach(d=>{ const r=c[d.key],col=STC[r.status];
+    h+=`<div class="card"><div class="card-h"><h3>${d.name}</h3><span class="status-pill st-${r.status}"><span class="dot" style="background:${col}"></span>${STLABEL[r.status]}</span></div>
+      <div style="font-size:11.5px; color:var(--muted); margin-bottom:10px;"><b>คำอธิบาย:</b> ${d.desc}</div>
+      <div style="font-size:11.5px; color:var(--gold-soft); margin-bottom:14px;"><b>สูตรคำนวณ:</b> ${d.formula}</div>
+      <div style="display:flex;align-items:flex-end;gap:24px;margin-bottom:14px">
+        <div><div style="font-size:11px;color:var(--muted)">ค่าปัจจุบัน</div><div style="font-family:Inter;font-size:30px;font-weight:700;color:${col}">${d.disp(c)}${d.unit==='เดือน'?' <small style="font-size:14px">เดือน</small>':''}</div></div>
+        <div><div style="font-size:11px;color:var(--muted)">เป้าหมาย</div><div style="font-size:14px;color:var(--cream);padding-bottom:8px">${d.target}</div></div>
+        <div style="margin-left:auto;text-align:right"><div style="font-size:11px;color:var(--muted)">คะแนน</div><div style="font-family:Inter;font-size:26px;font-weight:700;color:${col}">${r.score}</div></div></div>
+      <div class="bar" style="height:7px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden;margin-bottom:12px"><i style="display:block;height:100%;width:${(d.prog(c)*100).toFixed(0)}%;background:${col};border-radius:99px"></i></div>
+      <p style="font-size:12.5px;color:var(--muted);line-height:1.65">${d.exp(c)} — ${RECO[d.key].text}</p></div>`;
+  });
+  document.getElementById('ratio-detail').innerHTML=h+'</div>';
+}
+
+function renderGoals(c){
+  const goals=state.goals.filter(g=>g.name&&g.name.trim());
+  if(!goals.length){ document.getElementById('goal-list').innerHTML='<div style="color:var(--muted);font-size:13px;padding:10px 0">ยังไม่ได้กำหนดเป้าหมาย — เพิ่มได้ที่เมนู “เป้าหมาย”</div>'; return; }
+  document.getElementById('goal-list').innerHTML=goals.map((g,i)=>`<div class="goal-row"><div class="goal-pri">${i+1}</div>
+    <div style="flex:1"><div class="gn">${g.name}</div><div class="gy">${g.year?'ปีเป้าหมาย '+g.year:''}${g.notes?' · '+g.notes:''}</div></div>
+    <div class="ga">${g.target?fmtB(g.target):'—'}</div></div>`).join('');
+}
+
+function renderAssetLegend(c){
+  const items=[['สินทรัพย์สภาพคล่อง',c.liquid,'#C8A765'],['สินทรัพย์ลงทุน',c.invest,'#AF9E73'],['สินทรัพย์ใช้ส่วนตัว',c.personal,'#D5CDB7']];
+  const tot=c.assetsTotal||1;
+  document.getElementById('asset-legend').innerHTML=items.map(([nm,v,col])=>`<div class="li"><span class="sw" style="background:${col}"></span>${nm} · <b style="color:#fff;font-family:Inter">${fmtB(v)}</b> <span style="color:var(--muted)">(${(v/tot*100).toFixed(0)}%)</span></div>`).join('');
+}
+
+function recoMap(c){
+  return {
+    r1:{status:c.r1.status,title:'1. เงินสำรองฉุกเฉิน (สภาพคล่อง)',text:c.r1.status==='risk'?'เงินสำรองฉุกเฉินต่ำกว่า 3 เดือน ควรสะสมเงินในสินทรัพย์สภาพคล่องให้ครอบคลุมค่าใช้จ่าย 3–6 เดือน':c.r1.status==='warn'?'สภาพคล่องสูงเกิน 6 เดือน มีเงินจมมากเกินไป ควรแบ่งส่วนที่เกินไปลงทุนเพื่อเพิ่มผลตอบแทน':'สภาพคล่องอยู่ในเกณฑ์เหมาะสม (3–6 เดือน) กำลังพอดี'},
+    r2:{status:c.r2.status,title:'2. ระดับหนี้สิน (สัดส่วนหนี้)',text:c.r2.status==='risk'?'ระดับหนี้สูงเมื่อเทียบกับสินทรัพย์ (เกิน 50%) ควรลดหนี้ก่อนเพิ่มความเสี่ยงในการลงทุน':c.r2.status==='warn'?'ระดับหนี้อยู่ในเกณฑ์ที่ต้องเฝ้าระวัง ควรควบคุมไม่ให้เกิน 50% ของสินทรัพย์':'ระดับหนี้สินอยู่ในเกณฑ์ที่ดีและปลอดภัย (น้อยกว่า 50% ของสินทรัพย์)'},
+    r3:{status:c.r3.status,title:'3. ภาระชำระหนี้ (ภาระผ่อนหนี้)',text:c.r3.status==='risk'?'ภาระผ่อนหนี้สูงเกินไปเมื่อเทียบกับรายได้ (เกิน 45%) ควรปรับโครงสร้างหนี้หรือชะลอการก่อหนี้ใหม่':c.r3.status==='warn'?'ภาระผ่อนหนี้อยู่ในระดับที่ควรเฝ้าระวัง ควรคุมไม่ให้เกิน 45% ของรายได้':'ภาระผ่อนชำระหนี้อยู่ในเกณฑ์ดีและคล่องตัว (น้อยกว่า 45% ของรายได้)'},
+    r4:{status:c.r4.status,title:'4. วินัยการออม (อัตราการออม)',text:c.r4.status==='risk'?'อัตราการออมและลงทุนต่ำกว่า 10% ควรเพิ่มสัดส่วนการออม/ลงทุนอย่างเป็นระบบทันที':c.r4.status==='warn'?'อัตราการออมและลงทุนอยู่ในระดับพอใช้ ควรเพิ่มเป้าหมายให้เกิน 20% ของรายได้':'อัตราการออมและลงทุนแข็งแกร่ง (มากกว่า 10%) เป็นรากฐานที่ดีมาก'},
+    r5:{status:c.r5.status,title:'5. อัตราสินทรัพย์ลงทุน (การลงทุนสู่เป้าหมาย)',text:c.r5.status==='risk'?'สัดส่วนสินทรัพย์ลงทุนต่ำกว่า 50% ของความมั่งคั่งสุทธิ ควรทยอยสะสมสินทรัพย์ที่สร้างผลตอบแทน':c.r5.status==='warn'?'สัดส่วนสินทรัพย์ลงทุนอยู่ในระดับปานกลาง ควรเพิ่มให้เกิน 50% ของความมั่งคั่งสุทธิ':'สัดส่วนสินทรัพย์เพื่อการลงทุนแข็งแกร่งและเติบโตดี (มากกว่า 50% ของความมั่งคั่งสุทธิ)'}
+  };
+}
+
+function buildRecoHTML(c,limit){
+  const m=recoMap(c); 
+  let items=RATIO_DEFS.map(d=>({...m[d.key]}));
+  const ord={risk:0,warn:1,ok:2}; 
+  items.sort((a,b)=>ord[a.status]-ord[b.status]);
+  let h='';
+  if(items.every(i=>i.status==='ok')) h+=`<div class="rec ok"><div class="ic">★</div><div class="body"><h4>รากฐานการเงินแข็งแกร่ง</h4><p>ทุกอัตราส่วนอยู่ในเกณฑ์ดี ขั้นต่อไปคือการวางแผนตามเป้าหมาย (Goal-based Planning) และการสร้างความมั่งคั่งระยะยาว</p></div></div>`;
+  (limit?items.slice(0,limit):items).forEach(it=>{ const ic=it.status==='risk'?'!':it.status==='warn'?'△':'✓';
+    h+=`<div class="rec ${it.status}"><div class="ic">${ic}</div><div class="body"><h4>${it.title}</h4><p>${it.text}</p></div></div>`; });
+  return h;
+}
+function renderReco(c){ document.getElementById('reco-mini').innerHTML=buildRecoHTML(c,3); }
+
+/* =========================================================
+   YEAR UI + COMPARISON (YoY)
+   ========================================================= */
+function buildYearUI(){
+  const ys=yearList();
+  const sel=document.getElementById('year-select');
+  if(sel) sel.innerHTML=ys.map(y=>`<option value="${y}" ${y===DB.meta.activeYear?'selected':''}>${y}</option>`).join('');
+}
+
+function toggleCompareDetails() {
+  let block = document.getElementById('compare-details-block');
+  let btn = document.getElementById('btn-toggle-compare-details');
+  if (block.style.display === 'none') {
+    block.style.display = 'block';
+    btn.textContent = 'ซ่อนรายละเอียดเพิ่มเติม';
+  } else {
+    block.style.display = 'none';
+    btn.textContent = 'ดูรายละเอียดเพิ่มเติม';
+  }
+}
+
+function renderCompare(){
+  const ys=yearList(); 
+  const activeYear=DB.meta.activeYear;
+  const activeIdx = ys.indexOf(activeYear);
+  
+  let prevYear = null;
+  if (activeIdx > 0) {
+    prevYear = ys[activeIdx - 1];
+  }
+  
+  let emptyState = document.getElementById('compare-empty');
+  let compareBody = document.getElementById('compare-body');
+  
+  if (!prevYear) {
+    if (emptyState) emptyState.style.display = 'block';
+    if (compareBody) compareBody.style.display = 'none';
+    return;
+  }
+  
+  if (emptyState) emptyState.style.display = 'none';
+  if (compareBody) compareBody.style.display = 'block';
+  
+  const ca=compute(DB.years[prevYear]), cb=compute(DB.years[activeYear]);
+  const metrics=[
+    ['รายได้รวมต่อปี','incomeTotal','up'],
+    ['ค่าใช้จ่ายรวมต่อปี','expenseTotal','down'],
+    ['กระแสเงินสดสุทธิ','netCashflow','up'],
+    ['สินทรัพย์รวม','assetsTotal','up'],
+    ['หนี้สินรวม','debtTotal','down'],
+    ['ความมั่งคั่งสุทธิ','netWorth','up'],
+    ['คะแนนสุขภาพการเงิน','overall','up']
+  ];
+  
+  let h='';
+  metrics.forEach(([lbl,key,dir])=>{ 
+    const va=ca[key],vb=cb[key],diff=vb-va; 
+    const pc=va!==0?diff/Math.abs(va)*100:0;
+    const good=dir==='up'?diff>=0:diff<=0; 
+    const cls=diff===0?'':(good?'pos':'neg'); 
+    const arrow=diff>0?'▲':diff<0?'▼':'–';
+    const isScore=key==='overall'; 
+    const fv=v=>isScore?Math.round(v):fmtB(v);
+    
+    h+=`<div class="cmp-card">
+      <div class="cmp-lbl">${lbl}</div>
+      <div class="cmp-vals"><span class="ya">${fv(va)}</span><span class="arr">→</span><span class="yb">${fv(vb)}</span></div>
+      <div class="cmp-delta ${cls}">${arrow} ${isScore?(diff>0?'+':'')+Math.round(diff):fmtB(Math.abs(diff))} <small>(${pc>=0?'+':''}${pc.toFixed(1)}%)</small></div>
+    </div>`;
+  });
+  
+  document.getElementById('cmp-cards').innerHTML=h;
+  document.getElementById('cmp-head').textContent=`เปรียบเทียบปี ${prevYear} (ปีก่อนหน้า) → ปี ${activeYear} (ปีปัจจุบัน)`;
+  
+  renderCompareCharts(prevYear, activeYear);
+}
+
+function renderCompareCharts(ya,yb){
+  chartFontDefaults(); 
+  const ys=yearList(); 
+  const data=ys.map(y=>compute(DB.years[y]));
+  destroy('trend'); 
+  const ctxT=document.getElementById('ch-trend');
+  if(ctxT) charts['trend']=new Chart(ctxT,{type:'line',data:{labels:ys,datasets:[
+      {label:'สินทรัพย์รวม',data:data.map(d=>d.assetsTotal),borderColor:'#C8A765',backgroundColor:'rgba(200,167,101,.12)',tension:.3,fill:true,pointRadius:4},
+      {label:'หนี้สินรวม',data:data.map(d=>d.debtTotal),borderColor:'#C76B62',backgroundColor:'transparent',tension:.3,pointRadius:4},
+      {label:'ความมั่งคั่งสุทธิ',data:data.map(d=>d.netWorth),borderColor:'#74AE84',backgroundColor:'transparent',tension:.3,borderWidth:2.5,pointRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#D5CDB7',boxWidth:12,padding:16}},tooltip:{callbacks:{label:it=>` ${it.dataset.label}: ฿${fmt(it.raw)}`}}},
+      scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{callback:v=>'฿'+(v/1e6).toFixed(1)+'M'}}}}});
+      
+  destroy('cmp'); 
+  const ca=compute(DB.years[ya]), cb=compute(DB.years[yb]);
+  const cats=['รายได้','ค่าใช้จ่าย','กระแสเงินสดสุทธิ','สินทรัพย์','หนี้สิน','มั่งคั่งสุทธิ'];
+  const av=[ca.incomeTotal,ca.expenseTotal,ca.netCashflow,ca.assetsTotal,ca.debtTotal,ca.netWorth];
+  const bv=[cb.incomeTotal,cb.expenseTotal,cb.netCashflow,cb.assetsTotal,cb.debtTotal,cb.netWorth];
+  const ctxC=document.getElementById('ch-cmp');
+  if(ctxC) charts['cmp']=new Chart(ctxC,{type:'bar',data:{labels:cats,datasets:[
+      {label:'ปี '+ya,data:av,backgroundColor:'#AF9E73',borderRadius:5},
+      {label:'ปี '+yb,data:bv,backgroundColor:'#C8A765',borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#D5CDB7',boxWidth:12,padding:16}},tooltip:{callbacks:{label:it=>` ${it.dataset.label}: ฿${fmt(it.raw)}`}}},
+      scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{callback:v=>'฿'+(v/1e6).toFixed(1)+'M'}}}}});
+}
+
+/* =========================================================
+   DASHBOARD CHARTS
+   ========================================================= */
+function chartFontDefaults(){ Chart.defaults.font.family="'Prompt','Inter',sans-serif"; Chart.defaults.color='#8b96ad'; Chart.defaults.font.size=12; }
+function destroy(id){ if(charts[id]){charts[id].destroy(); delete charts[id];} }
+
+function renderCharts(c){
+  chartFontDefaults();
+  
+  destroy('asset'); 
+  const ctxA=document.getElementById('ch-asset');
+  if(ctxA) charts['asset']=new Chart(ctxA,{type:'doughnut',data:{labels:['สภาพคล่อง','ลงทุน','ใช้ส่วนตัว'],datasets:[{data:[c.liquid,c.invest,c.personal],backgroundColor:['#C8A765','#AF9E73','#D5CDB7'],borderColor:'#0d111c',borderWidth:3,hoverOffset:8}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'66%',plugins:{legend:{display:false},tooltip:{callbacks:{label:it=>` ${it.label}: ฿${fmt(it.raw)}`}}}}});
+    
+  destroy('debt'); 
+  const ctxD=document.getElementById('ch-debt');
+  if(ctxD) charts['debt']=new Chart(ctxD,{type:'bar',data:{labels:['หนี้ระยะสั้น','หนี้ระยะยาว'],datasets:[{data:[c.shortTerm,c.longTerm],backgroundColor:['#AF9E73','#C8A765'],borderRadius:8,barThickness:40}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:it=>' ฿'+fmt(it.raw)}}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{callback:v=>'฿'+(v/1e6).toFixed(1)+'M'}}}}});
+    
+  destroy('ratio'); 
+  const ctxR=document.getElementById('ch-ratio');
+  if(ctxR){ 
+    const scores=[c.r1.score,c.r2.score,c.r3.score,c.r4.score,c.r5.score]; 
+    const cols=[c.r1,c.r2,c.r3,c.r4,c.r5].map(r=>STC[r.status]);
+    charts['ratio']=new Chart(ctxR,{type:'bar',data:{labels:['1.เงินสำรอง','2.สัดส่วนหนี้','3.ภาระผ่อนหนี้','4.อัตราการออม','5.การลงทุนเป้าหมาย'],datasets:[{data:scores,backgroundColor:cols,borderRadius:6,barThickness:24}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:it=>' คะแนน '+it.raw+'/100'}}},scales:{x:{max:100,grid:{color:'rgba(255,255,255,.05)'}},y:{grid:{display:false}}}}});
+  }
+}
+
+/* =========================================================
+   NAV + INIT
+   ========================================================= */
+function goPage(pg) {
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.page === pg);
+  });
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('page-' + pg);
+  if (el) el.classList.add('active');
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) sidebar.classList.remove('open');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  
+  renderAll(true);
+}
+document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>goPage(el.dataset.page)));
+
+/* =========================================================
+   EXPORTS / IMPORTS
+   ========================================================= */
+function exportData() {
+  let clientName = state.profile.name || "Client";
+  let activeYear = DB.meta.activeYear || curYearBE();
+  let filename = sanitizeFilename(`TWP_Client_${clientName}_${activeYear}_FullData.json`);
+  
+  let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(DB, null, 2));
+  let downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", filename);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+}
+
+
+
+function sanitizeFilename(name) {
+  return name.replace(/[^a-zA-Z0-9_฀-๿.-]/g, '_');
+}
+
+function importData(inputEl) {
+  alert('ฟีเจอร์นำเข้าไฟล์ไม่พร้อมใช้งานในหน้านี้ กรุณาใช้ Planner Workspace แทน');
+}
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   CLIENT MODALS
+   ========================================================= */
+
+
+
+
+
+
+
+
+function formatDate(isoString) {
+  if (!isoString) return '—';
+  try {
+    let d = new Date(isoString);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('th-TH', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }) + ' ' + d.toLocaleTimeString('th-TH', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (e) {
+    return '—';
+  }
+}
+
+/* =========================================================
+   MODE SWITCHER
+   ========================================================= */
+
+
+
+
+/* =========================================================
+   PDF REPORT PRINTING
+   ========================================================= */
+function triggerPrint() {
+  preparePrintReport();
+  window.print();
+}
+
+function preparePrintReport() {
+  let c = compute();
+  let p = state.profile;
+  let activeYear = DB.meta.activeYear;
+  let clientName = p.name || "ลูกค้าเริ่มต้น";
+  let exportDate = new Date().toLocaleDateString('th-TH', {day:'2-digit', month:'long', year:'numeric'});
+  
+  let container = document.getElementById('print-report');
+  if (!container) return;
+  
+  let recsHTML = buildRecoHTML(c);
+  let goals = state.goals.filter(g=>g.name&&g.name.trim());
+  let goalsHTML = goals.length ? goals.map((g,i)=>`
+    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding: 6px 0; font-size: 13px;">
+      <span><b>${i+1}. ${g.name}</b> (${g.year?'ปี '+g.year:'—'})</span>
+      <span>${g.target?fmtB(g.target):'—'}</span>
+    </div>
+  `).join('') : '<p style="color:#666; font-size:13px;">ไม่มีเป้าหมายที่ระบุ</p>';
+  
+  let ratioRows = '';
+  RATIO_DEFS.forEach(d => {
+    let r = c[d.key];
+    let col = STC[r.status];
+    ratioRows += `
+      <div style="border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin-bottom: 10px; break-inside: avoid;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+          <b style="font-size: 14px;">${d.name}</b>
+          <span style="font-weight: bold; color: ${col};">${STLABEL[r.status]} (${r.score} คะแนน)</span>
+        </div>
+        <div style="font-size: 12px; color: #555; margin-bottom: 6px;">${d.desc}</div>
+        <div style="display: flex; justify-content: space-between; font-size: 13px; font-family: sans-serif;">
+          <span>ผลลัพธ์: <b>${d.disp(c)} ${d.unit}</b></span>
+          <span>เป้าหมาย: <b>${d.target}</b></span>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = `
+    <div style="padding: 40px; font-family: sans-serif; color: #111; background: #fff; line-height: 1.5;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px double #C8A765; padding-bottom: 12px; margin-bottom: 20px;">
+        <div>
+          <h1 style="font-size: 24px; color: #1b2740; margin: 0; font-weight: bold;">รายงานประเมินสุขภาพการเงิน (Financial OPD Card)</h1>
+          <div style="font-size: 14px; color: #666; margin-top: 4px;">Team Wealth Plan Private Wealth Planning</div>
+        </div>
+        <div style="text-align: right; font-size: 13px; color: #555;">
+          <div>ชื่อลูกค้า: <b>${clientName}</b></div>
+          <div>สำหรับรอบปี (พ.ศ.): <b>${activeYear}</b></div>
+          <div>วันที่ออกรายงาน: <b>${exportDate}</b></div>
+        </div>
+      </div>
+      
+      <div style="background: #f7f8fa; border-left: 5px solid #C8A765; padding: 16px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; break-inside: avoid;">
+        <div>
+          <h2 style="font-size: 18px; margin: 0 0 4px 0; color: #1b2740;">คะแนนสุขภาพการเงินรวม: <span style="font-size: 26px; font-weight: bold; color: ${STC[c.overallStatus]};">${c.overall}</span> / 100</h2>
+          <div style="font-size: 13px; color: #555;">สถานะโดยรวม: <b>${STLABEL[c.overallStatus]}</b></div>
+        </div>
+      </div>
+      
+      <h3 style="font-size: 16px; border-bottom: 1px solid #1b2740; padding-bottom: 6px; margin: 24px 0 12px 0; color: #1b2740; text-transform: uppercase;">1. ภาพรวมทางการเงิน (Financial Snapshot)</h3>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; break-inside: avoid;">
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; background: #fff;">
+          <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #1b2740; border-bottom: 1px dashed #ddd; padding-bottom: 6px;">กระแสเงินสดรายปี</h4>
+          <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+            <tr><td style="padding: 4px 0;">รายได้รวมต่อปี:</td><td style="text-align: right; font-weight: bold;">${fmtB(c.incomeTotal)}</td></tr>
+            <tr><td style="padding: 4px 0;">ค่าใช้จ่ายรวมต่อปี:</td><td style="text-align: right; font-weight: bold;">${fmtB(c.expenseTotal)}</td></tr>
+            <tr style="border-top: 1px solid #eee;"><td style="padding: 6px 0; font-weight: bold;">กระแสเงินสดสุทธิ:</td><td style="text-align: right; font-weight: bold; color: ${c.netCashflow>=0?'#74AE84':'#C76B62'};">${fmtB(c.netCashflow)}</td></tr>
+          </table>
+        </div>
+        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; background: #fff;">
+          <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #1b2740; border-bottom: 1px dashed #ddd; padding-bottom: 6px;">ความมั่งคั่งสุทธิ (งบดุล)</h4>
+          <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+            <tr><td style="padding: 4px 0;">สินทรัพย์รวม:</td><td style="text-align: right; font-weight: bold; color: #74AE84;">${fmtB(c.assetsTotal)}</td></tr>
+            <tr><td style="padding: 4px 0;">หนี้สินรวม:</td><td style="text-align: right; font-weight: bold; color: #C76B62;">${fmtB(c.debtTotal)}</td></tr>
+            <tr style="border-top: 1px solid #eee;"><td style="padding: 6px 0; font-weight: bold; font-size: 14px;">ความมั่งคั่งสุทธิ:</td><td style="text-align: right; font-weight: bold; font-size: 14px; color: #C8A765;">${fmtB(c.netWorth)}</td></tr>
+          </table>
+        </div>
+      </div>
+      
+      <h3 style="font-size: 16px; border-bottom: 1px solid #1b2740; padding-bottom: 6px; margin: 24px 0 12px 0; color: #1b2740; text-transform: uppercase;">2. รายละเอียดอัตราส่วนทางการเงิน</h3>
+      <div style="margin-bottom: 24px;">
+        ${ratioRows}
+      </div>
+      
+      <div style="page-break-before: always;"></div>
+      
+      <h3 style="font-size: 16px; border-bottom: 1px solid #1b2740; padding-bottom: 6px; margin: 24px 0 12px 0; color: #1b2740; text-transform: uppercase;">3. คำแนะนำสำหรับการวางแผนการเงิน</h3>
+      <div style="margin-bottom: 24px; font-size: 13px; line-height: 1.6; color:#000;">
+        ${recsHTML}
+      </div>
+      
+      <h3 style="font-size: 16px; border-bottom: 1px solid #1b2740; padding-bottom: 6px; margin: 24px 0 12px 0; color: #1b2740; text-transform: uppercase;">4. เป้าหมายทางการเงิน</h3>
+      <div style="margin-bottom: 40px;">
+        ${goalsHTML}
+      </div>
+      
+      <div style="border-top: 1px solid #ddd; padding-top: 16px; margin-top: 40px; font-size: 11px; color: #666; text-align: justify; line-height: 1.6; break-inside: avoid;">
+        <b>ข้อสงวนสิทธิ์การใช้งาน (Disclaimer):</b><br>
+        รายงานนี้เป็นข้อมูลประกอบการวิเคราะห์และวางแผนการเงินเบื้องต้น ไม่ใช่คำแนะนำการลงทุนหรือภาษีเฉพาะบุคคล กรุณาปรึกษาผู้เชี่ยวชาญก่อนตัดสินใจทางการเงิน
+      </div>
+    </div>
+  `;
+}
+
+/* =========================================================
+   APP INITIALIZATION
+   ========================================================= */
+function initApp() {
+  DB = loadClientSelf();
+  let activeYear = DB.meta.activeYear || Object.keys(DB.years).sort()[0] || curYearBE();
+  state = DB.years[activeYear];
+  
+  buildForms();
+  buildYearUI();
+  goPage('welcome');
+  
+  // Bind sidebar navigation clicks
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', () => {
+      goPage(el.dataset.page);
+    });
+  });
+}
+
+initApp();
+</script>
+</body>
+</html>
