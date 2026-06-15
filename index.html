@@ -952,8 +952,8 @@ function sampleState(){
       variable:{ food:240000, utilities:72000, phone:24000, transport:84000, parents:96000, travel:120000, clothes:60000, tax:0, tuition:0, childrenOther:60000, housekeeper:84000, other:0 }
     },
     assets:{
-      liquid:{ cash:200000, savingsAccount:500000, fixedDeposit:500000, coop:0, other:0 },
-      investment:{ bond:0, fund:0, stock:2000000, gold:0, crypto:0, realEstate:0, pvd:800000, rmfssf:0, thaiesg:0, gsbLottery:0, insuranceCash:0, other:0 },
+      liquid:{ cash:200000, savingsAccount:500000, fixedDeposit:500000, coop:0, gsbLottery:0, other:0 },
+      investment:{ bond:0, fund:0, stock:2000000, gold:0, crypto:0, realEstate:0, pvd:800000, rmfssf:0, thaiesg:0, insuranceCash:0, other:0 },
       personal:{ home:6000000, car:800000, jewelry:0, luxuryItems:0, collectibles:0, other:0 }
     },
     debts:{
@@ -967,11 +967,13 @@ function sampleState(){
 
 function ageFromBD(bd){ if(!bd)return null; const d=new Date(bd); if(isNaN(d.getTime()))return null; const t=new Date(); let a=t.getFullYear()-d.getFullYear(); const m=t.getMonth()-d.getMonth(); if(m<0||(m===0&&t.getDate()<d.getDate()))a--; return (a>=0&&a<140)?a:null; }
 
+function normalizeLiquid(liq){ liq=liq||{}; const v=k=>(+liq[k]||0); return {cash:v('cash'),savingsAccount:v('savingsAccount'),fixedDeposit:v('fixedDeposit'),coop:v('coop'),gsbLottery:v('gsbLottery'),other:v('other')}; }
+
 function normalizeInvestment(inv){ inv=inv||{}; const v=k=>(+inv[k]||0); return {
   bond:v('bond')+v('bonds'), fund:v('fund')+v('mutual'), stock:v('stock')+v('common')+v('preferred'),
   gold:v('gold'), crypto:v('crypto'), realEstate:v('realEstate'),
   pvd:v('pvd')+v('providentFund')+v('retirement'), rmfssf:v('rmfssf'), thaiesg:v('thaiesg')+v('tesg'),
-  gsbLottery:v('gsbLottery'), insuranceCash:v('insuranceCash'), other:v('other') }; }
+  insuranceCash:v('insuranceCash'), other:v('other') }; }
 
 function normalizePersonal(p){ p=p||{}; const v=k=>(+p[k]||0); return {home:v('home'),car:v('car'),jewelry:v('jewelry'),luxuryItems:v('luxuryItems'),collectibles:v('collectibles'),other:v('other')}; }
 
@@ -987,10 +989,19 @@ function ensureRec(rec){
   if(!rec.assets.investment) rec.assets.investment = {};
   if(!rec.assets.personal) rec.assets.personal = {};
   
+  // Migrate gsbLottery from investment to liquid
+  if ('gsbLottery' in rec.assets.investment) {
+    const val = +rec.assets.investment.gsbLottery || 0;
+    if (val > 0) {
+      rec.assets.liquid.gsbLottery = (+rec.assets.liquid.gsbLottery || 0) + val;
+    }
+    delete rec.assets.investment.gsbLottery;
+  }
+  
+  rec.assets.liquid=normalizeLiquid(rec.assets.liquid);
   rec.assets.investment=normalizeInvestment(rec.assets.investment); 
   rec.assets.personal=normalizePersonal(rec.assets.personal); 
   
-  if(!('gsbLottery' in rec.assets.investment)) rec.assets.investment.gsbLottery = 0;
   if(!('luxuryItems' in rec.assets.personal)) rec.assets.personal.luxuryItems = 0;
 
   // Upgrade income
@@ -1049,8 +1060,8 @@ function sampleYear2566(){
   s.profile.age=41; s.profile.planningYear="2566";
   s.income.salaryMonthly=140000; s.income.bonusAmount=420000;
   s.expenses.variable={food:228000,utilities:66000,phone:24000,transport:78000,parents:96000,travel:84000,clothes:54000,tax:0,tuition:0,childrenOther:48000,housekeeper:84000,other:0};
-  s.assets.liquid={cash:150000,savingsAccount:400000,fixedDeposit:400000,coop:0,other:0};
-  s.assets.investment={bond:0,fund:0,stock:1600000,gold:0,crypto:0,realEstate:0,pvd:660000,rmfssf:0,thaiesg:0,gsbLottery:0,insuranceCash:0,other:0};
+  s.assets.liquid={cash:150000,savingsAccount:400000,fixedDeposit:400000,coop:0,gsbLottery:0,other:0};
+  s.assets.investment={bond:0,fund:0,stock:1600000,gold:0,crypto:0,realEstate:0,pvd:660000,rmfssf:0,thaiesg:0,insuranceCash:0,other:0};
   s.assets.personal={home:6000000,car:900000,jewelry:0,luxuryItems:0,collectibles:0,other:0};
   s.debts.longTerm={autoLoan:0,mortgage:1350000,installment:0,other:0};
   s.debts.payments={mortgagePayment:240000,carPayment:144000,otherPayment:0};
@@ -1271,6 +1282,7 @@ const SCH = {
       ['savingsAccount','เงินฝากออมทรัพย์','ยอดเงินฝากออมทรัพย์ปัจจุบัน'],
       ['fixedDeposit','เงินฝากประจำ','ยอดเงินฝากประจำปัจจุบัน'],
       ['coop','เงินฝากสหกรณ์','เงินฝาก/หุ้นสหกรณ์ที่ถอนได้'],
+      ['gsbLottery','สลากออมสิน','มูลค่าสลากออมสินหรือผลิตภัณฑ์ออมทรัพย์ลักษณะคล้ายกันที่ถืออยู่ในปัจจุบัน'],
       ['other','อื่นๆ','สินทรัพย์สภาพคล่องอื่นๆ']] },
     investment:{ title:'สินทรัพย์เพื่อการลงทุน', tag:'Investment', desc:'สินทรัพย์ที่มีเป้าหมายเพื่อสร้างผลตอบแทนหรือเพิ่มความมั่งคั่ง', items:[
       ['bond','หุ้นกู้ / พันธบัตร','มูลค่าหุ้นกู้/พันธบัตรปัจจุบัน'],
@@ -1282,7 +1294,6 @@ const SCH = {
       ['pvd','PVD / กองทุนสำรองเลี้ยงชีพ','มูลค่ากองทุนสำรองเลี้ยงชีพสะสมปัจจุบัน'],
       ['rmfssf','RMF / SSF','มูลค่ากองทุน RMF + SSF ที่ถืออยู่'],
       ['thaiesg','Thai ESG','มูลค่ากองทุน Thai ESG'],
-      ['gsbLottery','สลากออมสิน','มูลค่าสลากออมสินหรือผลิตภัณฑ์ออมทรัพย์ลักษณะคล้ายกันที่ถืออยู่ในปัจจุบัน'],
       ['insuranceCash','มูลค่าเงินสดกรมธรรม์','มูลค่าเวนคืนกรมธรรม์ประกันชีวิต'],
       ['other','อื่นๆ','สินทรัพย์เพื่อการลงทุนอื่นๆ']] },
     personal:{ title:'สินทรัพย์ใช้ส่วนตัว', tag:'Personal', desc:'สินทรัพย์ที่ถือไว้เพื่อใช้งาน ไม่ใช่เพื่อสร้างกระแสเงินสดหรือผลตอบแทนโดยตรง', items:[
@@ -1388,8 +1399,8 @@ function buildIncomeForm(){
   document.getElementById('form-income').innerHTML=`
     <div class="fgroup"><div class="fgroup-h">เงินเดือน &amp; โบนัส<span class="tag">Salary &amp; Bonus</span></div>
       <div class="field-grid">
-        ${fld('income.salaryMonthly','เงินเดือนต่อเดือน — หมวดภาษีเบื้องต้น: 40(1)','เงินเดือนประจำต่อเดือน ก่อนหักภาษี','เงินได้ 40(1)')}
-        ${fld('income.bonusAmount','โบนัสต่อปี — หมวดภาษีเบื้องต้น: 40(1)','ยอดโบนัสที่ได้รับต่อปี','เงินได้ 40(1)')}
+        ${fld('income.salaryMonthly','เงินเดือน (ต่อเดือน)','เงินเดือนประจำต่อเดือน ก่อนหักภาษี','40(1)')}
+        ${fld('income.bonusAmount','โบนัสต่อปี (บาท)','โบนัสรวมทั้งปี (บาท)','40(1)')}
       </div>
       <div class="calc-row">
         <span style="font-size:12.5px;color:var(--cream)">สูตรคำนวณ: รายได้จากเงินเดือนต่อปี = เงินเดือนต่อเดือน × 12 + โบนัสต่อปี</span>
@@ -1398,12 +1409,12 @@ function buildIncomeForm(){
     </div>
     <div class="fgroup"><div class="fgroup-h">รายได้อื่น ๆ จากแหล่งต่าง ๆ<span class="tag">Other Income Sources</span></div>
       <div class="field-grid">
-        ${fld('income.freelance','รายได้ฟรีแลนซ์ / ค่าบริการ','รายได้จากงานฟรีแลนซ์ รับจ้าง หรือบริการต่อปี','เงินได้ 40(2)')}
-        ${fld('income.interest','ดอกเบี้ยรับ','ดอกเบี้ยเงินฝาก/พันธบัตรสะสมต่อปี','เงินได้ 40(4)')}
-        ${fld('income.dividend','เงินปันผลรับ','เงินปันผลจากหุ้น/กองทุนรวมต่อปี','เงินได้ 40(4)')}
-        ${fld('income.rental','รายได้จากค่าเช่า','รายได้จากการปล่อยเช่าสินทรัพย์/อสังหาริมทรัพย์ต่อปี','เงินได้ 40(5)')}
-        ${fld('income.assetSale','รายได้จากขายสินทรัพย์','รายได้จากการขายสินทรัพย์ประเภทต่าง ๆ ต่อปี','เงินได้ 40(8)')}
-        ${fld('income.business','รายได้ธุรกิจ','รายได้จากธุรกิจการค้า กิจการส่วนตัวต่อปี','เงินได้ 40(8)')}
+        ${fld('income.freelance','รายได้ฟรีแลนซ์ / ค่าบริการ','รายได้จากงานฟรีแลนซ์ รับจ้าง หรือบริการต่อปี','40(2)')}
+        ${fld('income.interest','ค่าลิขสิทธิ์','ค่าลิขสิทธิ์ เครื่องหมายการค้า หรือค่าสิทธิในทรัพย์สินทางปัญญาต่อปี','เงินได้ 40(3)')}
+        ${fld('income.dividend','ดอกเบี้ย / เงินปันผล','ดอกเบี้ยเงินฝาก/พันธบัตร หรือเงินปันผลจากหุ้น/กองทุนรวมต่อปี','เงินได้ 40(4)')}
+        ${fld('income.rental','รายได้จากค่าเช่า','รายได้จากการปล่อยเช่าสินทรัพย์/อสังหาริมทรัพย์ต่อปี','40(5)')}
+        ${fld('income.assetSale','ค่าวิชาชีพ','รายได้จากวิชาชีพอิสระ เช่น ประกอบโรคศิลปะ กฎหมาย วิศวกรรม สถาปัตยกรรม บัญชี ประณีตศิลปกรรมต่อปี','เงินได้ 40(6)')}
+        ${fld('income.business','รายได้ธุรกิจ','รายได้จากธุรกิจการค้า กิจการส่วนตัวต่อปี','40(8)')}
         ${otherFieldHTML}
       </div>
     </div>
@@ -1880,7 +1891,11 @@ function renderCompareCharts(ya,yb){
       {label:'ปี '+ya,data:av,backgroundColor:'#AF9E73',borderRadius:5},
       {label:'ปี '+yb,data:bv,backgroundColor:'#C8A765',borderRadius:5}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#D5CDB7',boxWidth:12,padding:16}},tooltip:{callbacks:{label:it=>` ${it.dataset.label}: ฿${fmt(it.raw)}`}}},
-      scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{callback:v=>'฿'+(v/1e6).toFixed(1)+'M'}}}}});
+      scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{callback:function(v){
+        if(v>=1e6) return '฿'+(v/1e6).toFixed(1)+'M';
+        if(v>=1e3) return '฿'+(v/1e3).toFixed(0)+'K';
+        return '฿'+v;
+      }}}}}});
 }
 
 /* =========================================================
@@ -1899,8 +1914,49 @@ function renderCharts(c){
     
   destroy('debt'); 
   const ctxD=document.getElementById('ch-debt');
-  if(ctxD) charts['debt']=new Chart(ctxD,{type:'bar',data:{labels:['หนี้ระยะสั้น','หนี้ระยะยาว'],datasets:[{data:[c.shortTerm,c.longTerm],backgroundColor:['#AF9E73','#C8A765'],borderRadius:8,barThickness:40}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:it=>' ฿'+fmt(it.raw)}}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{callback:v=>'฿'+(v/1e6).toFixed(1)+'M'}}}}});
+  if(ctxD) charts['debt']=new Chart(ctxD,{
+    type:'bar',
+    data:{labels:['หนี้ระยะสั้น','หนี้ระยะยาว'],datasets:[{data:[c.shortTerm,c.longTerm],backgroundColor:['#AF9E73','#C8A765'],borderRadius:8,barThickness:40}]},
+    plugins: [{
+      id: 'datalabels',
+      afterDraw(chart) {
+        const ctx = chart.ctx;
+        chart.data.datasets.forEach((dataset, i) => {
+          const meta = chart.getDatasetMeta(i);
+          meta.data.forEach((bar, index) => {
+            const val = dataset.data[index];
+            if (val > 0) {
+              const valText = '฿' + fmt(val);
+              ctx.fillStyle = '#D5CDB7';
+              ctx.font = "bold 11px 'Prompt', sans-serif";
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'bottom';
+              ctx.fillText(valText, bar.x, bar.y - 5);
+            }
+          });
+        });
+      }
+    }],
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:it=>' ฿'+fmt(it.raw)}}},
+      scales:{
+        x:{grid:{display:false}},
+        y:{
+          grace: '15%',
+          grid:{color:'rgba(255,255,255,.05)'},
+          ticks:{
+            callback: function(v) {
+              if (v >= 1e6) return '฿' + (v/1e6).toFixed(1) + 'M';
+              if (v >= 1e3) return '฿' + (v/1e3).toFixed(0) + 'K';
+              return '฿' + v;
+            }
+          }
+        }
+      }
+    }
+  });
     
   destroy('ratio'); 
   const ctxR=document.getElementById('ch-ratio');
