@@ -1433,7 +1433,7 @@ function buildProfileForm(){
     kids+=`<div class="child-row">
       <div class="field"><label>ชื่อบุตรคนที่ ${i+1}</label><input type="text" data-path="profile.childrenList.${i}.name" value="${c.name||''}" placeholder="ชื่อบุตร"></div>
       <div class="field"><label>วันเกิด <span class="age-hint" id="child-age-${i}">${ca!=null?'· อายุ '+ca+' ปี':''}</span></label><input type="date" value="${c.birthdate||''}" onchange="childDate(${i},this)"></div>
-      <button class="rm" title="ลบบุตรคนนี้" onclick="removeChild(${i})">✕</button>
+      <button type="button" class="rm" title="ลบบุตรคนนี้" onclick="deleteChild(${i})">✕</button>
     </div>`; });
   document.getElementById('form-profile').innerHTML=`
     <div class="fgroup"><div class="fgroup-h">ผู้วางแผน<span class="tag">Client</span></div>
@@ -1452,7 +1452,7 @@ function buildProfileForm(){
       </div></div>
     <div class="fgroup"><div class="fgroup-h">บุตร<span class="tag">Children</span></div>
       ${kids||'<div style="font-size:12.5px;color:var(--muted);margin-bottom:14px">ยังไม่มีข้อมูลบุตร — กดปุ่มด้านล่างเพื่อเพิ่ม</div>'}
-      <button class="btn sm" onclick="addChild()">＋ เพิ่มบุตร</button>
+      <button type="button" class="btn sm" onclick="addChild()">＋ เพิ่มบุตร</button>
     </div>
     <div class="fgroup"><div class="fgroup-h">บิดา &amp; มารดา<span class="tag">Parents</span></div>
       <div class="field-grid">${f('profile.fatherName','ชื่อบิดา')}${f('profile.fatherAge','อายุ','number')}${f('profile.fatherHealth','สุขภาพ')}${f('profile.motherName','ชื่อมารดา')}${f('profile.motherAge','อายุ','number')}${f('profile.motherHealth','สุขภาพ')}</div></div>`;
@@ -1462,7 +1462,7 @@ function selfBirth(el){ state.profile.birthdate=el.value; const a=ageFromBD(el.v
 function spouseBirth(el){ state.profile.spouseBirthdate=el.value; const a=ageFromBD(el.value); const h=document.getElementById('spouse-age-hint'); if(h)h.textContent=a!=null?('· อายุ '+a+' ปี'):''; save(); }
 function childDate(i,el){ ensureRec(state); if(state.profile.childrenList[i]){ state.profile.childrenList[i].birthdate=el.value; const a=ageFromBD(el.value); const h=document.getElementById('child-age-'+i); if(h)h.textContent=a!=null?('· อายุ '+a+' ปี'):''; save(); } }
 function addChild(){ ensureRec(state); state.profile.childrenList.push({name:'',birthdate:''}); save(); buildForms(); goPage('profile'); }
-function removeChild(i){ ensureRec(state); state.profile.childrenList.splice(i,1); save(); buildForms(); goPage('profile'); }
+function deleteChild(i){ ensureRec(state); state.profile.childrenList.splice(i,1); save(); buildForms(); goPage('profile'); }
 
 function buildGoalsForm(){
   let h='';
