@@ -234,15 +234,46 @@ td.num,th.num{text-align:right;font-family:'Inter';font-variant-numeric:tabular-
 .cmp-controls select{background:rgba(0,0,0,.28);border:1px solid var(--line-soft);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:'Inter';font-weight:600}
 .cmp-controls select:focus{outline:none;border-color:var(--gold)}
 .cmp-vs{color:var(--gold-soft);font-size:13px;padding-bottom:12px}
-.cmp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.cmp-card{background:linear-gradient(168deg,var(--navy),#141d31);border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:18px}
-.cmp-lbl{font-size:12px;color:var(--muted);margin-bottom:11px}
-.cmp-vals{display:flex;align-items:baseline;gap:8px;font-family:'Inter';font-variant-numeric:tabular-nums}
-.cmp-vals .ya{color:var(--muted);font-size:14px}.cmp-vals .arr{color:var(--gold-soft);font-size:12px}
-.cmp-vals .yb{color:var(--white);font-size:18px;font-weight:700}
-.cmp-delta{margin-top:10px;font-size:13px;font-weight:600;font-family:'Inter'}
-.cmp-delta small{font-weight:400;opacity:.85}
-.cmp-delta.pos{color:var(--ok)}.cmp-delta.neg{color:var(--risk)}
+.cmp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.cmp-card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.cmp-card::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(168deg, rgba(200,167,101,0.02), transparent);
+  pointer-events: none;
+}
+.cmp-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(200,167,101,0.2);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+.cmp-lbl { font-size: 13px; color: var(--muted); margin-bottom: 12px; letter-spacing: 0.2px; }
+.cmp-vals { display: flex; align-items: baseline; gap: 10px; font-family: 'Inter'; font-variant-numeric: tabular-nums; }
+.cmp-vals .ya { color: rgba(255,255,255,0.4); font-size: 14px; }
+.cmp-vals .arr { color: var(--gold-soft); font-size: 14px; opacity: 0.6; }
+.cmp-vals .yb { color: var(--white); font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+.cmp-delta {
+  margin-top: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Inter';
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 12px;
+}
+.cmp-delta.pos { background: rgba(116,174,132,0.12); color: var(--ok); }
+.cmp-delta.neg { background: rgba(199,107,98,0.12); color: var(--risk); }
+.cmp-delta.neutral { background: rgba(255,255,255,0.05); color: var(--muted); }
+.cmp-delta small { font-weight: 500; opacity: 0.8; margin-left: 2px; }
 
 /* ===== Empty state ===== */
 .empty{display:flex;flex-direction:column;align-items:center;text-align:center;padding:56px 30px;gap:8px}
@@ -773,21 +804,22 @@ td.num,th.num{text-align:right;font-family:'Inter';font-variant-numeric:tabular-
         <!-- compare content -->
         <div id="compare-body">
           <div class="card">
-            <div class="card-h"><h3 id="cmp-head">เปรียบเทียบปี</h3><span class="eyebrow">Year-over-Year</span></div>
+            <div class="card-h" style="align-items:center; flex-wrap:wrap; gap:10px;">
+              <h3 style="margin:0;">เปรียบเทียบปี</h3>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <select id="cmp-year-a" onchange="updateCompareYears()" class="input sm" style="width:100px; padding:4px; font-size:13px;"></select>
+                <span style="color:var(--muted); font-size:13px;">vs</span>
+                <select id="cmp-year-b" onchange="updateCompareYears()" class="input sm" style="width:100px; padding:4px; font-size:13px;"></select>
+              </div>
+            </div>
             <div class="cmp-grid" id="cmp-cards"></div>
             <div class="note">สีเขียว = พัฒนาการที่ดีขึ้น · สีแดง = ถดถอย (สำหรับหนี้สิน/ค่าใช้จ่าย ค่าที่ลดลงถือว่าดีขึ้น)</div>
           </div>
           <div class="section-title"><h2>แนวโน้มความมั่งคั่งหลายปี · Multi-year Trend</h2><div class="ln"></div></div>
           <div class="card"><div class="chart-box"><canvas id="ch-trend"></canvas></div></div>
           
-          <!-- Collapsible detail comparison -->
-          <div style="margin-top: 24px; text-align: center;">
-            <button class="btn" onclick="toggleCompareDetails()" id="btn-toggle-compare-details">ดูรายละเอียดเพิ่มเติม</button>
-          </div>
-          <div id="compare-details-block" style="display:none; margin-top: 20px;">
-            <div class="section-title"><h2>เปรียบเทียบรายหมวด · A vs B</h2><div class="ln"></div></div>
-            <div class="card"><div class="chart-box"><canvas id="ch-cmp"></canvas></div></div>
-          </div>
+          <div class="section-title" style="margin-top:24px;"><h2>เปรียบเทียบรายหมวด · A vs B</h2><div class="ln"></div></div>
+          <div class="card"><div class="chart-box"><canvas id="ch-cmp"></canvas></div></div>
         </div>
       </section>
 
@@ -1842,41 +1874,41 @@ function buildYearUI(){
   if(sel) sel.innerHTML=ys.map(y=>`<option value="${y}" ${y===DB.meta.activeYear?'selected':''}>${y}</option>`).join('');
 }
 
-function toggleCompareDetails() {
-  let block = document.getElementById('compare-details-block');
-  let btn = document.getElementById('btn-toggle-compare-details');
-  if (block.style.display === 'none') {
-    block.style.display = 'block';
-    btn.textContent = 'ซ่อนรายละเอียดเพิ่มเติม';
-  } else {
-    block.style.display = 'none';
-    btn.textContent = 'ดูรายละเอียดเพิ่มเติม';
-  }
-}
+
+
+function updateCompareYears(){ window.cmpYearA = document.getElementById('cmp-year-a').value; window.cmpYearB = document.getElementById('cmp-year-b').value; renderCompare(); }
 
 function renderCompare(){
   const ys=yearList(); 
-  const activeYear=DB.meta.activeYear;
-  const activeIdx = ys.indexOf(activeYear);
-  
-  let prevYear = null;
-  if (activeIdx > 0) {
-    prevYear = ys[activeIdx - 1];
-  }
-  
-  let emptyState = document.getElementById('compare-empty');
-  let compareBody = document.getElementById('compare-body');
-  
-  if (!prevYear) {
+  if (ys.length < 2) {
+    let emptyState = document.getElementById('compare-empty');
+    let compareBody = document.getElementById('compare-body');
     if (emptyState) emptyState.style.display = 'block';
     if (compareBody) compareBody.style.display = 'none';
     return;
   }
   
+  if(!window.cmpYearB || !ys.includes(window.cmpYearB)) window.cmpYearB = DB.meta.activeYear || ys[ys.length-1];
+  if(!window.cmpYearA || !ys.includes(window.cmpYearA)) {
+    const bIdx = ys.indexOf(window.cmpYearB);
+    window.cmpYearA = bIdx > 0 ? ys[bIdx-1] : ys[0];
+  }
+  
+  if(window.cmpYearA === window.cmpYearB && ys.length > 1){
+     window.cmpYearA = ys.find(y => y !== window.cmpYearB);
+  }
+
+  const selA = document.getElementById('cmp-year-a');
+  const selB = document.getElementById('cmp-year-b');
+  if(selA) selA.innerHTML = ys.map(y=>`<option value="${y}" ${y===window.cmpYearA?'selected':''}>ปี ${y}</option>`).join('');
+  if(selB) selB.innerHTML = ys.map(y=>`<option value="${y}" ${y===window.cmpYearB?'selected':''}>ปี ${y}</option>`).join('');
+
+  let emptyState = document.getElementById('compare-empty');
+  let compareBody = document.getElementById('compare-body');
   if (emptyState) emptyState.style.display = 'none';
   if (compareBody) compareBody.style.display = 'block';
   
-  const ca=compute(DB.years[prevYear]), cb=compute(DB.years[activeYear]);
+  const ca=compute(DB.years[window.cmpYearA]), cb=compute(DB.years[window.cmpYearB]);
   const metrics=[
     ['รายได้รวมต่อปี','incomeTotal','up'],
     ['ค่าใช้จ่ายรวมต่อปี','expenseTotal','down'],
@@ -1892,8 +1924,8 @@ function renderCompare(){
     const va=ca[key],vb=cb[key],diff=vb-va; 
     const pc=va!==0?diff/Math.abs(va)*100:0;
     const good=dir==='up'?diff>=0:diff<=0; 
-    const cls=diff===0?'':(good?'pos':'neg'); 
-    const arrow=diff>0?'▲':diff<0?'▼':'–';
+    const cls=diff===0?'neutral':(good?'pos':'neg'); 
+    const arrow=diff===0?'–':diff>0?'▲':'▼';
     const isScore=key==='overall'; 
     const fv=v=>isScore?Math.round(v):fmtB(v);
     
@@ -1905,9 +1937,8 @@ function renderCompare(){
   });
   
   document.getElementById('cmp-cards').innerHTML=h;
-  document.getElementById('cmp-head').textContent=`เปรียบเทียบปี ${prevYear} (ปีก่อนหน้า) → ปี ${activeYear} (ปีปัจจุบัน)`;
   
-  renderCompareCharts(prevYear, activeYear);
+  renderCompareCharts(window.cmpYearA, window.cmpYearB);
 }
 
 function renderCompareCharts(ya,yb){
