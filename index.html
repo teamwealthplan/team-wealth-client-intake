@@ -165,7 +165,18 @@ th,td{text-align:left;padding:9px 10px}
 thead th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;border-bottom:1px solid var(--line-soft)}
 tbody tr{border-bottom:1px solid rgba(255,255,255,.035)}
 td.num,th.num{text-align:right;font-family:'Inter';font-variant-numeric:tabular-nums}
-.chart-box{position:relative;height:300px}
+.chart-box {
+position: relative;
+height: 320px;
+min-height: 320px;
+}
+
+@media (max-width: 768px) {
+.chart-box {
+height: 300px;
+min-height: 300px;
+}
+}
 .chart-box.sm{height:240px}
 .legend{display:flex;flex-wrap:wrap;gap:11px 18px;margin-top:16px}
 .legend .li{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--cream)}
@@ -1226,6 +1237,23 @@ function getByPath(o,p){ return p.split('.').reduce((a,k)=>a&&a[k],o); }
 function setByPath(o,p,v){ const ks=p.split('.'); const last=ks.pop(); let t=o; ks.forEach(k=>t=t[k]); t[last]=v; }
 function hasData(c){ return (c.incomeTotal+c.expenseTotal+c.assetsTotal+c.debtTotal)>0; }
 
+function formatChartBaht(value){
+const n = Number(value) || 0;
+const sign = n < 0 ? '-' : '';
+const abs = Math.abs(n);
+
+if (abs >= 1000000) {
+const m = abs / 1000000;
+return sign + '฿' + (m >= 10 ? m.toFixed(0) : m.toFixed(1)) + 'M';
+}
+
+if (abs >= 1000) {
+return sign + '฿' + Math.round(abs / 1000) + 'K';
+}
+
+return sign + '฿' + Math.round(abs);
+}
+
 /* =========================================================
    COMPUTE
    ========================================================= */
@@ -1945,13 +1973,6 @@ function renderCompareCharts(ya,yb){
   chartFontDefaults(); 
   const ys=yearList(); 
   const data=ys.map(y=>compute(DB.years[y]));
-  const fmtY = v => {
-    let sign = v < 0 ? '-' : '';
-    let val = Math.abs(v);
-    if(val >= 1e6) return sign + '฿' + (val/1e6).toFixed(1) + 'M';
-    if(val >= 1e3) return sign + '฿' + (val/1e3).toFixed(0) + 'K';
-    return sign + '฿' + val;
-  };
 
   destroy('trend'); 
   const ctxT=document.getElementById('ch-trend');
@@ -1959,8 +1980,58 @@ function renderCompareCharts(ya,yb){
       {label:'สินทรัพย์รวม',data:data.map(d=>d.assetsTotal),borderColor:'#C8A765',backgroundColor:'rgba(200,167,101,.12)',tension:.3,fill:true,pointRadius:4},
       {label:'หนี้สินรวม',data:data.map(d=>d.debtTotal),borderColor:'#C76B62',backgroundColor:'transparent',tension:.3,pointRadius:4},
       {label:'ความมั่งคั่งสุทธิ',data:data.map(d=>d.netWorth),borderColor:'#74AE84',backgroundColor:'transparent',tension:.3,borderWidth:2.5,pointRadius:4}]},
-    options:{layout:{padding:{left:10, right:20}},responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#D5CDB7',boxWidth:12,padding:16}},tooltip:{callbacks:{label:it=>` ${it.dataset.label}: ฿${fmt(it.raw)}`}}},
-      scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{callback:fmtY}}}}});
+    options:{
+      layout:{
+        padding:{
+          left: 28,
+          right: 18,
+          top: 14,
+          bottom: 14
+        }
+      },
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#D5CDB7',boxWidth:12,padding:16}},
+        tooltip:{callbacks:{label:it=>` ${it.dataset.label}: ฿${fmt(it.raw)}`}}
+      },
+      scales:{
+        x:{
+          grid:{
+            display: false
+          },
+          ticks:{
+            autoSkip: true,
+            maxRotation: 0,
+            minRotation: 0,
+            color: '#8b96ad',
+            font:{
+              size: window.innerWidth < 768 ? 10 : 11
+            }
+          }
+        },
+        y:{
+          beginAtZero: true,
+          grace: '12%',
+          border:{
+            display: false
+          },
+          grid:{
+            color: 'rgba(255,255,255,.05)'
+          },
+          ticks:{
+            maxTicksLimit: window.innerWidth < 768 ? 4 : 5,
+            autoSkip: true,
+            padding: 12,
+            color: '#8b96ad',
+            font:{
+              size: window.innerWidth < 768 ? 10 : 11
+            },
+            callback: value => formatChartBaht(value)
+          }
+        }
+      }
+    }});
       
   destroy('cmp'); 
   const ca=compute(DB.years[ya]), cb=compute(DB.years[yb]);
@@ -1971,8 +2042,58 @@ function renderCompareCharts(ya,yb){
   if(ctxC) charts['cmp']=new Chart(ctxC,{type:'bar',data:{labels:cats,datasets:[
       {label:'ปี '+ya,data:av,backgroundColor:'#AF9E73',borderRadius:5},
       {label:'ปี '+yb,data:bv,backgroundColor:'#C8A765',borderRadius:5}]},
-    options:{layout:{padding:{left:10, right:20}},responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#D5CDB7',boxWidth:12,padding:16}},tooltip:{callbacks:{label:it=>` ${it.dataset.label}: ฿${fmt(it.raw)}`}}},
-      scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{callback:fmtY}}}}});
+    options:{
+      layout:{
+        padding:{
+          left: 28,
+          right: 18,
+          top: 14,
+          bottom: 14
+        }
+      },
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#D5CDB7',boxWidth:12,padding:16}},
+        tooltip:{callbacks:{label:it=>` ${it.dataset.label}: ฿${fmt(it.raw)}`}}
+      },
+      scales:{
+        x:{
+          grid:{
+            display: false
+          },
+          ticks:{
+            autoSkip: true,
+            maxRotation: 0,
+            minRotation: 0,
+            color: '#8b96ad',
+            font:{
+              size: window.innerWidth < 768 ? 10 : 11
+            }
+          }
+        },
+        y:{
+          beginAtZero: true,
+          grace: '12%',
+          border:{
+            display: false
+          },
+          grid:{
+            color: 'rgba(255,255,255,.05)'
+          },
+          ticks:{
+            maxTicksLimit: window.innerWidth < 768 ? 4 : 5,
+            autoSkip: true,
+            padding: 12,
+            color: '#8b96ad',
+            font:{
+              size: window.innerWidth < 768 ? 10 : 11
+            },
+            callback: value => formatChartBaht(value)
+          }
+        }
+      }
+    }});
 }
 
 /* =========================================================
