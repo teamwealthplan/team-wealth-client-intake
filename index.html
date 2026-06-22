@@ -542,6 +542,71 @@ min-height: 300px;
     gap: 6px !important;
   }
 }
+/* Custom CTA Styles */
+.cta-premium-card {
+  background: linear-gradient(135deg, var(--navy) 0%, rgba(200, 167, 101, 0.08) 100%);
+  border: 1px dashed var(--gold);
+  border-radius: var(--radius-sm);
+  padding: 24px;
+  margin-top: 24px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+}
+.cta-premium-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -30%;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(200, 167, 101, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.cta-premium-card .cta-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cta-premium-card .cta-desc {
+  font-size: 13px;
+  color: var(--cream);
+  line-height: 1.6;
+  max-width: 680px;
+}
+.cta-premium-card .cta-btn-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Secondary CTA for smaller placements */
+.cta-sec-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gold-soft);
+  border: 1px solid var(--gold-soft);
+  background: rgba(200, 167, 101, 0.05);
+  font-size: 12.5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.cta-sec-inline:hover {
+  background: rgba(200, 167, 101, 0.14);
+  color: var(--white);
+  border-color: var(--gold);
+}
 </style>
 </head>
 <body>
@@ -650,7 +715,12 @@ min-height: 300px;
                   <p id="dash-health-desc" style="font-size: 13px; color: var(--muted); margin-top: 4px; max-width: 600px;"></p>
                 </div>
               </div>
-              <button class="btn gold" onclick="goPage('health')">ดูรายละเอียดสุขภาพการเงิน →</button>
+              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <a id="dash-booking-btn" href="#" target="_blank" class="cta-sec-inline" style="padding: 9px 16px;">
+                  🗓️ จองคิวปรึกษาฟรี
+                </a>
+                <button class="btn gold" onclick="goPage('health')">ดูรายละเอียดสุขภาพการเงิน →</button>
+              </div>
             </div>
           </div>
 
@@ -779,6 +849,21 @@ min-height: 300px;
             <button class="btn ghost sm" onclick="goPage('reco')" style="align-self: flex-start;">ดูคำแนะนำทั้งหมด →</button>
           </div>
 
+          <!-- Premium CTA Card -->
+          <div class="cta-premium-card">
+            <div class="cta-title">
+              <span>💡 ต้องการแผนการเงินที่จับต้องได้และเจาะลึกเฉพาะตัวคุณ?</span>
+            </div>
+            <div class="cta-desc">
+              นัดหมายพูดคุยกับที่ปรึกษาการเงินแบบ 1-on-1 ฟรี 30 นาที ผ่าน Google Meet เพื่อนำผลวิเคราะห์เหล่านี้ไปปรับจูนและออกแบบแนวทางที่เหมาะกับเป้าหมายชีวิตจริงของคุณ
+            </div>
+            <div class="cta-btn-group">
+              <a id="reco-premium-booking-btn" href="#" target="_blank" class="btn gold">
+                🗓️ จองคิวคุยกับที่ปรึกษาการเงินฟรี (30 นาที)
+              </a>
+            </div>
+          </div>
+
           <!-- Section 5: Goals -->
           <div class="section-title"><h2>เป้าหมาย</h2><div class="ln"></div></div>
           <div class="card" style="margin-bottom: 24px;">
@@ -799,6 +884,20 @@ min-height: 300px;
         </div>
         <div class="section-title"><h2>รายละเอียดอัตราส่วนการเงิน</h2><div class="ln"></div></div>
         <div id="ratio-detail"></div>
+        
+        <!-- CTA for Health Page -->
+        <div class="card" style="margin-top: 24px; padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; border: 1px solid var(--line-soft); background: rgba(199, 107, 98, 0.05);">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="font-size: 24px;">🚨</div>
+            <div>
+              <h4 style="font-size: 14.5px; color: var(--white); font-weight: 600; margin: 0;">พบจุดแดงหรือจุดเสี่ยงในอัตราส่วนการเงินของคุณ?</h4>
+              <p style="font-size: 12.5px; color: var(--cream); margin: 4px 0 0 0;">อย่าปล่อยให้ปัญหาบานปลาย ปรึกษานักวางแผนการเงินเพื่อปรับปรุงสถานะด่วน</p>
+            </div>
+          </div>
+          <a id="health-booking-btn" href="#" target="_blank" class="btn gold" style="background: linear-gradient(135deg, #c76b62, #9b4b44); color: var(--white);">
+            🗓️ จองคิวปรับปรุงแผนการเงินด่วน
+          </a>
+        </div>
       </section>
 
       <!-- ============ COMPARE ============ -->
@@ -839,6 +938,20 @@ min-height: 300px;
         <div class="card form-page">
           <div class="card-h"><h3>คำแนะนำการวางแผนการเงิน · Recommendations</h3><span class="eyebrow">Planner Insight</span></div>
           <div id="reco-full"></div>
+        </div>
+
+        <!-- CTA for Recommendations Page -->
+        <div class="card" style="margin-top: 24px; padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; border: 1px dashed var(--gold); background: linear-gradient(135deg, var(--navy) 0%, rgba(200, 167, 101, 0.05) 100%);">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="font-size: 24px;">💡</div>
+            <div>
+              <h4 style="font-size: 14.5px; color: var(--white); font-weight: 600; margin: 0;">ต้องการนำแนวทางเหล่านี้ไปวางแผนปฏิบัติจริง?</h4>
+              <p style="font-size: 12.5px; color: var(--cream); margin: 4px 0 0 0;">จองคิวพูดคุย 1-on-1 ร่วมกับที่ปรึกษาการเงินทาง Google Meet เพื่อเริ่มลงมือทำจริง</p>
+            </div>
+          </div>
+          <a id="reco-page-booking-btn" href="#" target="_blank" class="btn gold">
+            🗓️ เริ่มทำตามคำแนะนำกับที่ปรึกษาฟรี
+          </a>
         </div>
       </section>
 
@@ -970,6 +1083,7 @@ min-height: 300px;
 <div id="print-report"></div>
 
 <script>
+const CONSULT_BOOKING_URL = 'https://calendar.app.google/RgnkQhtPoGi3H45dA'; // ปลายทางสำหรับปุ่มจองคิวที่ปรึกษาการเงิน (Google Meet / Calendar)
 
 /* =========================================================
    SAMPLE (อ้างอิง OPD Card 2569) — ใช้กับปุ่ม “ดูข้อมูลตัวอย่าง”
@@ -2386,6 +2500,16 @@ function initApp() {
       goPage(el.dataset.page);
     });
   });
+
+  // Set Google Meet booking URLs
+  const dashBtn = document.getElementById('dash-booking-btn');
+  if (dashBtn) dashBtn.href = CONSULT_BOOKING_URL;
+  const premiumBtn = document.getElementById('reco-premium-booking-btn');
+  if (premiumBtn) premiumBtn.href = CONSULT_BOOKING_URL;
+  const healthBtn = document.getElementById('health-booking-btn');
+  if (healthBtn) healthBtn.href = CONSULT_BOOKING_URL;
+  const recoBtn = document.getElementById('reco-page-booking-btn');
+  if (recoBtn) recoBtn.href = CONSULT_BOOKING_URL;
 }
 
 initApp();
